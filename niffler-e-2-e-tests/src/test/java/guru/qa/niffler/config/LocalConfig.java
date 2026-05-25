@@ -55,6 +55,6 @@ enum LocalConfig implements Config {
 
   @Override
   public String dbPassword() {
-    return "secret";
+    return "postgres";
   }
 }

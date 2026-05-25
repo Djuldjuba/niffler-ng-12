@@ -8,6 +8,7 @@ import guru.qa.niffler.data.entity.spend.CategoryEntity;
 import guru.qa.niffler.data.entity.spend.SpendEntity;
 import guru.qa.niffler.model.SpendJson;
 import java.sql.SQLException;
+import java.util.Optional;
 
 public class SpendDbClient {
 
@@ -15,14 +16,23 @@ public class SpendDbClient {
     private final CategoryDao categoryDao = new CategoryDaoJdbc();
 
     public SpendJson createSpend(SpendJson spend) throws SQLException {
-        SpendEntity spendEntity = SpendEntity.fromJson(spend);
-        if (spendEntity.getCategory().getId() == null) {
-            CategoryEntity categoryEntity = categoryDao.create(spendEntity.getCategory());
-            spendEntity.setCategory(categoryEntity);
+        Optional<CategoryEntity> existingCategory = categoryDao
+                .findCategoryByUsernameAndCategoryName(
+                        spend.username(),
+                        spend.category().name()
+                );
+
+        CategoryEntity categoryEntity;
+        if (existingCategory.isPresent()) {
+            categoryEntity = existingCategory.get();
+        } else {
+            CategoryEntity newCategory = CategoryEntity.fromJson(spend.category());
+            categoryEntity = categoryDao.create(newCategory);
         }
 
-        return SpendJson.fromEntity(
-                spendDao.create(spendEntity)
-        );
+        SpendEntity spendEntity = SpendEntity.fromJson(spend);
+        spendEntity.setCategory(categoryEntity);
+
+        return SpendJson.fromEntity(spendDao.create(spendEntity));
     }
 }
