@@ -49,9 +49,14 @@ enum LocalConfig implements Config {
   }
 
   @Override
-  public String dbUsername() {
-    return "postgres";
+  public String githubUrl() {
+   return "https://api.github.com/";
   }
+
+   @Override
+   public String dbUsername() {
+     return "postgres";
+   }
 
   @Override
   public String dbPassword() {
