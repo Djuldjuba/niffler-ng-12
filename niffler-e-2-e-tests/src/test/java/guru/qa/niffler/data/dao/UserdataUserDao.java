@@ -1,18 +1,17 @@
 package guru.qa.niffler.data.dao;
 
-import guru.qa.niffler.data.entity.userdata.UserEntity;
+import guru.qa.niffler.data.entity.userdata.UserDataEntity;
 
-import java.sql.SQLException;
 import java.util.Optional;
 import java.util.UUID;
 
 public interface UserdataUserDao {
 
-    UserEntity createUser(UserEntity user) throws SQLException;
+    UserDataEntity createUser(UserDataEntity user);
 
-    Optional<UserEntity> findById(UUID id) throws SQLException;
+    Optional<UserDataEntity> findById(UUID id);
 
-    Optional<UserEntity> findByUsername(String username) throws SQLException;
+    Optional<UserDataEntity> findByUsername(String username);
 
-    void delete(UserEntity user) throws SQLException;
+    void delete(UserDataEntity user);
 }
