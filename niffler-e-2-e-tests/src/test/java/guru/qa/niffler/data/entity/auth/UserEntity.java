@@ -1,0 +1,32 @@
+package guru.qa.niffler.data.entity.auth;
+
+import guru.qa.niffler.model.UserJson;
+import lombok.Getter;
+import lombok.Setter;
+
+import java.io.Serializable;
+import java.util.UUID;
+
+@Getter
+@Setter
+public class UserEntity implements Serializable {
+    private UUID id;
+    private String username;
+    private String password;
+    private Boolean enabled;
+    private Boolean accountNonExpired;
+    private Boolean accountNonLocked;
+    private Boolean credentialsNonExpired;
+
+    public static UserEntity fromJson(UserJson json) {
+        UserEntity ue = new UserEntity();
+        ue.setId(json.id());
+        ue.setUsername(json.username());
+        ue.setPassword(json.password());
+        ue.setEnabled(json.enabled());
+        ue.setAccountNonExpired(json.accountNonExpired());
+        ue.setAccountNonLocked(json.accountNonLocked());
+        ue.setCredentialsNonExpired(json.credentialsNonExpired());
+        return ue;
+    }
+}
