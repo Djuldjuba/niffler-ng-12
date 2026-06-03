@@ -23,7 +23,7 @@ public class UserDataEntity implements Serializable {
     public static UserDataEntity fromJson(UserdataUserJson json) {
         UserDataEntity ue = new UserDataEntity();
         ue.setId(json.id());
-        ue.setUsername(json.username());
+        ue.setUsername(null);
         ue.setFirstname(json.firstname());
         ue.setSurname(json.surname());
         ue.setFullname(json.fullname());

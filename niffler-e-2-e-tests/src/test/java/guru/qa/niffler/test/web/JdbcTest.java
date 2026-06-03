@@ -3,6 +3,8 @@ package guru.qa.niffler.test.web;
 import guru.qa.niffler.data.entity.auth.Authority;
 import guru.qa.niffler.model.*;
 import guru.qa.niffler.service.SpendDbClient;
+import guru.qa.niffler.service.UserdataDbClient;
+import guru.qa.niffler.service.UsersDbClient;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
@@ -22,12 +24,12 @@ public class JdbcTest {
                         new Date(),
                         new CategoryJson(
                                 null,
-                                "cat-name-tx",
-                                "duck",
+                                "проверка",
+                                "работы теста",
                                 false
                         ),
                         CurrencyValues.RUB,
-                        1000.0,
+                        1234.0,
                         "spend-name-tx",
                         "duck"
                 ),
@@ -39,9 +41,9 @@ public class JdbcTest {
 
     @Test
     void createUserWithAuthoritiesTest() {
-        SpendDbClient spendDbClient = new SpendDbClient();
+        UserdataDbClient userdataDbClient = new UserdataDbClient();
 
-        UserJson user = spendDbClient.createUserWithAuthorities(
+        UserJson user = userdataDbClient.createUserWithAuthorities(
                 new UserJson(
                         null,
                         "testuser_with_auth555",
@@ -61,4 +63,21 @@ public class JdbcTest {
         System.out.println("Created user: " + user);
     }
 
+    @Test
+    void springJdbcTest() {
+        UsersDbClient usersDbClient = new UsersDbClient();
+        UserdataUserJson user = usersDbClient.createUserSpringJdbc(
+                new UserdataUserJson(
+                        null,
+                        "valentin-4",
+                        null,
+                        null,
+                        null,
+                        CurrencyValues.RUB,
+                        null,
+                        null
+                )
+        );
+        System.out.println(user);
+    }
 }

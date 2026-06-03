@@ -1,7 +1,7 @@
 package guru.qa.niffler.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import guru.qa.niffler.data.entity.auth.UserEntity;
+import guru.qa.niffler.data.entity.auth.AuthUserEntity;
 
 import java.util.UUID;
 
@@ -14,7 +14,7 @@ public record UserJson(
         @JsonProperty("account_non_locked") Boolean accountNonLocked,
         @JsonProperty("credentials_non_expired") Boolean credentialsNonExpired
 ) {
-    public static UserJson fromEntity(UserEntity entity) {
+    public static UserJson fromEntity(AuthUserEntity entity) {
         return new UserJson(
                 entity.getId(),
                 entity.getUsername(),

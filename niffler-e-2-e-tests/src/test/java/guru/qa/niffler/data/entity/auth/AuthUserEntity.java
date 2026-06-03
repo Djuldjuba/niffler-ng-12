@@ -9,7 +9,7 @@ import java.util.UUID;
 
 @Getter
 @Setter
-public class UserEntity implements Serializable {
+public class AuthUserEntity implements Serializable {
     private UUID id;
     private String username;
     private String password;
@@ -18,8 +18,8 @@ public class UserEntity implements Serializable {
     private Boolean accountNonLocked;
     private Boolean credentialsNonExpired;
 
-    public static UserEntity fromJson(UserJson json) {
-        UserEntity ue = new UserEntity();
+    public static AuthUserEntity fromJson(UserJson json) {
+        AuthUserEntity ue = new AuthUserEntity();
         ue.setId(json.id());
         ue.setUsername(json.username());
         ue.setPassword(json.password());
