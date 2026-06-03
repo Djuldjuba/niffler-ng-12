@@ -46,8 +46,6 @@ public class UserdataUserDaoJdbc implements UserdataUserDao {
                 }
                 user.setId(generatedKey);
                 return user;
-            } catch (SQLException e) {
-                throw new RuntimeException(e);
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -68,9 +66,9 @@ public class UserdataUserDaoJdbc implements UserdataUserDao {
                     } else {
                         return Optional.empty();
                     }
+                } catch (SQLException e) {
+                    throw new RuntimeException(e);
                 }
-            } catch (SQLException e) {
-                throw new RuntimeException(e);
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -92,8 +90,6 @@ public class UserdataUserDaoJdbc implements UserdataUserDao {
                         return Optional.empty();
                     }
                 }
-            } catch (SQLException e) {
-                throw new RuntimeException(e);
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);

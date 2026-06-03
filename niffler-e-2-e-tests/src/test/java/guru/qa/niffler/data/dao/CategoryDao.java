@@ -18,4 +18,6 @@ public interface CategoryDao {
     List<CategoryEntity> findAllByUsername(String username) throws SQLException;
 
     void deleteCategory(CategoryEntity category) throws SQLException;
+
+    List<CategoryEntity> findAll() throws SQLException;
 }

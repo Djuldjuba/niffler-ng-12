@@ -16,4 +16,6 @@ public interface SpendDao {
     List<SpendEntity> findAllByUsername(String username) throws SQLException;
 
     void deleteSpend(SpendEntity spend) throws SQLException;
+
+    List<SpendEntity> findAll() throws SQLException;
 }
