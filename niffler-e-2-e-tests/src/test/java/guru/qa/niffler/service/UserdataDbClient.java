@@ -1,16 +1,13 @@
 package guru.qa.niffler.service;
 
 import guru.qa.niffler.config.Config;
-import guru.qa.niffler.data.dao.AuthAuthorityDao;
-import guru.qa.niffler.data.dao.AuthUserDao;
-import guru.qa.niffler.data.dao.UserdataUserDao;
-import guru.qa.niffler.data.dao.impl.AuthAuthorityDaoJdbc;
-import guru.qa.niffler.data.dao.impl.AuthUserDaoJdbc;
-import guru.qa.niffler.data.dao.impl.UserdataUserDaoJdbc;
 import guru.qa.niffler.data.entity.auth.AuthUserEntity;
 import guru.qa.niffler.data.entity.auth.AuthorityEntity;
 import guru.qa.niffler.data.entity.userdata.UserEntity;
-import guru.qa.niffler.data.tpl.JdbcTransactionTemplate;
+import guru.qa.niffler.data.repository.AuthUserRepository;
+import guru.qa.niffler.data.repository.UserdataUserRepository;
+import guru.qa.niffler.data.repository.impl.*;
+import guru.qa.niffler.data.tpl.XaTransactionTemplate;
 import guru.qa.niffler.model.AuthorityJson;
 import guru.qa.niffler.model.UserJson;
 import guru.qa.niffler.model.UserdataUserJson;
@@ -21,45 +18,34 @@ public class UserdataDbClient {
 
     private static final Config CFG = Config.getInstance();
 
-    private final UserdataUserDao userDao = new UserdataUserDaoJdbc();
+    private final UserdataUserRepository userdataUserRepository = new UserdataUserRepositoryHibernate();
+    private final AuthUserRepository authUserRepository = new AuthUserRepositoryHibernate();
 
-    private final AuthUserDao authUserDao = new AuthUserDaoJdbc();
-    private final AuthAuthorityDao authAuthorityDao = new AuthAuthorityDaoJdbc();
-
-    private final JdbcTransactionTemplate jdbcTxTemplate = new JdbcTransactionTemplate(
-            CFG.spendJdbcUrl()
+    private final XaTransactionTemplate xaTransactionTemplate = new XaTransactionTemplate(
+            CFG.userdataJdbcUrl(),
+            CFG.authJdbcUrl()
     );
 
     public UserdataUserJson createUser(UserdataUserJson user) {
-        UserEntity userEntity = UserEntity.fromJson(user);
-
-        return UserdataUserJson.fromEntity(
-                userDao.createUser(userEntity)
-        );
+        return xaTransactionTemplate.execute(() -> {
+            UserEntity userEntity = UserEntity.fromJson(user);
+            UserEntity createdUser = userdataUserRepository.create(userEntity);
+            return UserdataUserJson.fromEntity(createdUser);
+        });
     }
 
-    public UserJson createUserWithAuthorities(UserJson user, List<AuthorityJson> authorities, int isolationLevel) {
-        return jdbcTxTemplate.execute(() -> {
-                    AuthUserEntity userEntity = AuthUserEntity.fromJson(user);
-                    AuthUserEntity createdUser = authUserDao.createUser(userEntity);
+    public UserJson createUserWithAuthorities(UserJson user, List<AuthorityJson> authorities) {
+        return xaTransactionTemplate.execute(() -> {
+            AuthUserEntity userEntity = AuthUserEntity.fromJson(user);
 
-                    AuthorityEntity[] authorityEntities = authorities.stream()
-                            .map(authorityJson -> {
-                                AuthorityEntity authorityEntity = AuthorityEntity.fromJson(authorityJson);
-                                if (authorityEntity.getUser() == null || authorityEntity.getUser().getId() == null) {
-                                    AuthUserEntity userRef = new AuthUserEntity();
-                                    userRef.setId(createdUser.getId());
-                                    authorityEntity.setUser(userRef);
-                                }
-                                return authorityEntity;
-                            })
-                            .toArray(AuthorityEntity[]::new);
+            for (AuthorityJson authorityJson : authorities) {
+                AuthorityEntity authorityEntity = AuthorityEntity.fromJson(authorityJson);
+                authorityEntity.setUser(userEntity);
+                userEntity.getAuthorities().add(authorityEntity);
+            }
 
-                    authAuthorityDao.create(authorityEntities);
-
-                    return UserJson.fromEntity(createdUser);
-                },
-                isolationLevel
-        );
+            AuthUserEntity createdUser = authUserRepository.create(userEntity);
+            return UserJson.fromEntity(createdUser);
+        });
     }
 }

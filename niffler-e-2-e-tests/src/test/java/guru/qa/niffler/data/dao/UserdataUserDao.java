@@ -9,9 +9,13 @@ public interface UserdataUserDao {
 
     UserEntity createUser(UserEntity user);
 
+    UserEntity updateUser(UserEntity user);
+
     Optional<UserEntity> findById(UUID id);
 
     Optional<UserEntity> findByUsername(String username);
 
     void delete(UserEntity user);
+
+    void deletePushTokens(UUID userId);
 }

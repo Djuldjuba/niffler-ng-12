@@ -51,6 +51,31 @@ public class UserdataUserDaoJdbc implements UserdataUserDao {
     }
 
     @Override
+    public UserEntity updateUser(UserEntity user) {
+        try (PreparedStatement ps = holder(CFG.userdataJdbcUrl()).connection().prepareStatement(
+                "UPDATE \"user\" SET username = ?, firstname = ?, surname = ?, full_name = ?, " +
+                        "currency = ?, photo = ?, photo_small = ? WHERE id = ?"
+        )) {
+            ps.setString(1, user.getUsername());
+            ps.setString(2, user.getFirstname());
+            ps.setString(3, user.getSurname());
+            ps.setString(4, user.getFullname());
+            ps.setString(5, user.getCurrency().name());
+            ps.setBytes(6, user.getPhoto());
+            ps.setBytes(7, user.getPhotoSmall());
+            ps.setObject(8, user.getId());
+
+            int updatedRows = ps.executeUpdate();
+            if (updatedRows == 0) {
+                throw new SQLException("User not found with id: " + user.getId());
+            }
+            return user;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
     public Optional<UserEntity> findById(UUID id) {
         try (PreparedStatement ps = holder(CFG.userdataJdbcUrl()).connection().prepareStatement(
                 "SELECT * FROM \"user\" WHERE id = ?"
@@ -92,6 +117,18 @@ public class UserdataUserDaoJdbc implements UserdataUserDao {
                 "DELETE FROM \"user\" WHERE id = ?"
         )) {
             ps.setObject(1, user.getId());
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public void deletePushTokens(UUID userId) {
+        try (PreparedStatement ps = holder(CFG.userdataJdbcUrl()).connection().prepareStatement(
+                "DELETE FROM push_tokens WHERE user_id = ?"
+        )) {
+            ps.setObject(1, userId);
             ps.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException(e);

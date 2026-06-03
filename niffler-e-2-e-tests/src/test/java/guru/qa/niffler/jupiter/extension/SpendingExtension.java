@@ -13,8 +13,6 @@ import org.junit.platform.commons.support.AnnotationSupport;
 
 import java.util.Date;
 
-import static guru.qa.niffler.data.IsolationLevels.READ_UNCOMMITTED;
-
 public class SpendingExtension implements BeforeEachCallback, ParameterResolver {
 
     public static final ExtensionContext.Namespace NAMESPACE = ExtensionContext.Namespace.create(SpendingExtension.class);
@@ -42,7 +40,7 @@ public class SpendingExtension implements BeforeEachCallback, ParameterResolver 
             );
 
             SpendJson createdSpending;
-            createdSpending = spendClient.createSpend(spend, READ_UNCOMMITTED);
+            createdSpending = spendClient.createSpend(spend);
 
             context.getStore(NAMESPACE)
                     .put(context.getUniqueId(), createdSpending);

@@ -3,7 +3,7 @@ package guru.qa.niffler.data.repository.impl;
 import guru.qa.niffler.config.Config;
 import guru.qa.niffler.data.dao.FriendshipDao;
 import guru.qa.niffler.data.dao.UserdataUserDao;
-import guru.qa.niffler.data.dao.impl.FriendshipDaoJdbc;
+import guru.qa.niffler.data.dao.impl.FriendshipDaoSpringJdbc;
 import guru.qa.niffler.data.dao.impl.UserdataUserDaoSpringJdbc;
 import guru.qa.niffler.data.entity.userdata.UserEntity;
 import guru.qa.niffler.data.repository.UserdataUserRepository;
@@ -11,12 +11,11 @@ import guru.qa.niffler.data.repository.UserdataUserRepository;
 import java.util.Optional;
 import java.util.UUID;
 
-
-public class UserdataUserRepositoryJdbc implements UserdataUserRepository {
+public class UserdataUserRepositorySpringJdbc implements UserdataUserRepository {
 
     private static final Config CFG = Config.getInstance();
     private final UserdataUserDao udUserDao = new UserdataUserDaoSpringJdbc();
-    private final FriendshipDao friendshipDao = new FriendshipDaoJdbc();
+    private final FriendshipDao friendshipDao = new FriendshipDaoSpringJdbc();
 
     @Override
     public UserEntity create(UserEntity user) {
@@ -30,7 +29,7 @@ public class UserdataUserRepositoryJdbc implements UserdataUserRepository {
 
     @Override
     public Optional<UserEntity> findByUsername(String username) {
-        return Optional.empty();
+        return udUserDao.findByUsername(username);
     }
 
     @Override
@@ -54,11 +53,13 @@ public class UserdataUserRepositoryJdbc implements UserdataUserRepository {
         if (existing.isEmpty()) {
             throw new RuntimeException("User not found with id: " + user.getId());
         }
-        udUserDao.delete(user);
-        return udUserDao.createUser(user);
+        return udUserDao.updateUser(user);
     }
 
     @Override
     public void remove(UserEntity user) {
+        friendshipDao.removeFriendships(user.getId());
+        udUserDao.deletePushTokens(user.getId());
+        udUserDao.delete(user);
     }
 }

@@ -2,7 +2,6 @@ package guru.qa.niffler.data.dao;
 
 import guru.qa.niffler.data.entity.spend.SpendEntity;
 
-import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -11,6 +10,8 @@ public interface SpendDao {
 
     SpendEntity create(SpendEntity spend);
 
+    SpendEntity update(SpendEntity spend);
+
     Optional<SpendEntity> findSpendById(UUID uuid);
 
     List<SpendEntity> findAllByUsername(String username);
@@ -18,4 +19,6 @@ public interface SpendDao {
     void deleteSpend(SpendEntity spend);
 
     List<SpendEntity> findAll();
+
+    Optional<SpendEntity> findByUsernameAndDescription(String username, String description);
 }

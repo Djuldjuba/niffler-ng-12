@@ -8,6 +8,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Date;
+import java.util.UUID;
 
 import static guru.qa.niffler.data.tpl.Connections.holder;
 
@@ -84,6 +85,19 @@ public class FriendshipDaoJdbc implements FriendshipDao {
             }
         } catch (SQLException e) {
             throw new RuntimeException("Failed to add friend between " + requester.getUsername() + " and " + addressee.getUsername(), e);
+        }
+    }
+
+    @Override
+    public void removeFriendships(UUID userId) {
+        try (PreparedStatement ps = holder(CFG.userdataJdbcUrl()).connection().prepareStatement(
+                "DELETE FROM friendship WHERE requester_id = ? OR addressee_id = ?"
+        )) {
+            ps.setObject(1, userId);
+            ps.setObject(2, userId);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to delete friendships for user: " + userId, e);
         }
     }
 }
