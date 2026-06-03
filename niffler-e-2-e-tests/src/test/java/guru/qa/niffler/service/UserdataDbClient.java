@@ -9,7 +9,7 @@ import guru.qa.niffler.data.dao.impl.AuthUserDaoJdbc;
 import guru.qa.niffler.data.dao.impl.UserdataUserDaoJdbc;
 import guru.qa.niffler.data.entity.auth.AuthUserEntity;
 import guru.qa.niffler.data.entity.auth.AuthorityEntity;
-import guru.qa.niffler.data.entity.userdata.UserDataEntity;
+import guru.qa.niffler.data.entity.userdata.UserEntity;
 import guru.qa.niffler.data.tpl.JdbcTransactionTemplate;
 import guru.qa.niffler.model.AuthorityJson;
 import guru.qa.niffler.model.UserJson;
@@ -20,6 +20,7 @@ import java.util.List;
 public class UserdataDbClient {
 
     private static final Config CFG = Config.getInstance();
+
     private final UserdataUserDao userDao = new UserdataUserDaoJdbc();
 
     private final AuthUserDao authUserDao = new AuthUserDaoJdbc();
@@ -30,7 +31,7 @@ public class UserdataDbClient {
     );
 
     public UserdataUserJson createUser(UserdataUserJson user) {
-        UserDataEntity userEntity = UserDataEntity.fromJson(user);
+        UserEntity userEntity = UserEntity.fromJson(user);
 
         return UserdataUserJson.fromEntity(
                 userDao.createUser(userEntity)

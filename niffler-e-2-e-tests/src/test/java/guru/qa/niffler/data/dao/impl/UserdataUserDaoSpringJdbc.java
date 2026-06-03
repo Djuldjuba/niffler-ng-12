@@ -2,7 +2,7 @@ package guru.qa.niffler.data.dao.impl;
 
 import guru.qa.niffler.config.Config;
 import guru.qa.niffler.data.dao.UserdataUserDao;
-import guru.qa.niffler.data.entity.userdata.UserDataEntity;
+import guru.qa.niffler.data.entity.userdata.UserEntity;
 import guru.qa.niffler.data.mapper.UserdataUserEntityRowMapper;
 import guru.qa.niffler.data.tpl.DataSources;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -19,7 +19,7 @@ public class UserdataUserDaoSpringJdbc implements UserdataUserDao {
     private static final Config CFG = Config.getInstance();
 
     @Override
-    public UserDataEntity createUser(UserDataEntity user) {
+    public UserEntity createUser(UserEntity user) {
         JdbcTemplate jdbcTemplate = new JdbcTemplate(DataSources.dataSource(CFG.userdataJdbcUrl()));
         KeyHolder kh = new GeneratedKeyHolder();
         jdbcTemplate.update(con -> {
@@ -43,7 +43,7 @@ public class UserdataUserDaoSpringJdbc implements UserdataUserDao {
     }
 
     @Override
-    public Optional<UserDataEntity> findById(UUID id) {
+    public Optional<UserEntity> findById(UUID id) {
         JdbcTemplate jdbcTemplate = new JdbcTemplate(DataSources.dataSource(CFG.userdataJdbcUrl()));
         return Optional.ofNullable(
                 jdbcTemplate.queryForObject(
@@ -55,11 +55,11 @@ public class UserdataUserDaoSpringJdbc implements UserdataUserDao {
     }
 
     @Override
-    public Optional<UserDataEntity> findByUsername(String username) {
+    public Optional<UserEntity> findByUsername(String username) {
         return Optional.empty();
     }
 
     @Override
-    public void delete(UserDataEntity user) {
+    public void delete(UserEntity user) {
     }
 }

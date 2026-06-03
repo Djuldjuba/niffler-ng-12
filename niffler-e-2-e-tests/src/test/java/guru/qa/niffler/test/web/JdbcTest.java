@@ -24,13 +24,13 @@ public class JdbcTest {
                         new Date(),
                         new CategoryJson(
                                 null,
-                                "проверка",
-                                "работы теста",
+                                "проверка 6.1",
+                                "duck",
                                 false
                         ),
                         CurrencyValues.RUB,
-                        1234.0,
-                        "spend-name-tx",
+                        3333.3,
+                        "вот так вот",
                         "duck"
                 ),
                 READ_UNCOMMITTED
@@ -46,8 +46,8 @@ public class JdbcTest {
         UserJson user = userdataDbClient.createUserWithAuthorities(
                 new UserJson(
                         null,
-                        "testuser_with_auth555",
-                        "encoded_password_555",
+                        "valentin-11",
+                        "1231324",
                         true,
                         true,
                         true,
@@ -66,10 +66,10 @@ public class JdbcTest {
     @Test
     void springJdbcTest() {
         UsersDbClient usersDbClient = new UsersDbClient();
-        UserdataUserJson user = usersDbClient.createUserSpringJdbc(
+        UserdataUserJson user = usersDbClient.createUser(
                 new UserdataUserJson(
                         null,
-                        "valentin-4",
+                        "valentin-9",
                         null,
                         null,
                         null,
