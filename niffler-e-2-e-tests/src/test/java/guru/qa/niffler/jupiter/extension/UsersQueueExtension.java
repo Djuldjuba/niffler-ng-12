@@ -45,7 +45,7 @@ public class UsersQueueExtension implements
 
     static {
         EMPTY_USERS.add(new StaticUser("bee", "12345", null, null, null));
-        WITH_FRIEND_USERS.add(new StaticUser("duck", "12345", "dima", null, null));
+        WITH_FRIEND_USERS.add(new StaticUser("duck", "12345", "alex", null, null));
         WITH_INCOME_REQUEST_USERS.add(new StaticUser("alex", "12345", null, "bee", null));
         WITH_OUTCOME_REQUEST_USERS.add(new StaticUser("barsik", "12345", null, null, "bill"));
     }
@@ -141,7 +141,7 @@ public class UsersQueueExtension implements
 
     @Override
     public boolean supportsParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
-        return parameterContext.getParameter().getType().isAssignableFrom(StaticUser.class)
+        return parameterContext.getParameter().getType().equals(StaticUser.class)
                 && AnnotationSupport.isAnnotated(parameterContext.getParameter(), UserType.class);
     }
 

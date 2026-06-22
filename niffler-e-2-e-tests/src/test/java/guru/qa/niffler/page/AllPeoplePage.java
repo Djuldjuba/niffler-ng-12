@@ -1,9 +1,10 @@
 package guru.qa.niffler.page;
 
+import com.codeborne.selenide.Condition;
 import com.codeborne.selenide.SelenideElement;
 
 import static com.codeborne.selenide.Condition.visible;
-import static com.codeborne.selenide.Selenide.$x;
+import static com.codeborne.selenide.Selenide.$$;
 
 public class AllPeoplePage extends BasePage {
 
@@ -13,6 +14,10 @@ public class AllPeoplePage extends BasePage {
     }
 
     public SelenideElement waitingStatusForFriend(String name) {
-        return $x(String.format("//*[@id='all']//*[text()='%s']/ancestor::tbody//span[text()='Waiting...']", name));
+        return $$("#all tr")
+                .filterBy(Condition.text(name))
+                .first()
+                .find("span.MuiChip-label")
+                .shouldHave(Condition.text("Waiting..."));
     }
 }

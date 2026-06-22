@@ -16,42 +16,38 @@ import static guru.qa.niffler.jupiter.extension.UsersQueueExtension.UserType.Typ
 import static guru.qa.niffler.jupiter.extension.UsersQueueExtension.UserType.Type.WITH_OUTCOME_REQUEST;
 
 @ExtendWith({UsersQueueExtension.class, BrowserExtension.class})
-public class ProfileTest {
+public class FriendsWebTest {
 
     private static final Config CFG = Config.getInstance();
 
     @Test
-    @ExtendWith(UsersQueueExtension.class)
     void friendShouldBePresentInFriendsTable(@UserType(WITH_FRIEND) StaticUser user) {
         Selenide.open(CFG.frontUrl(), LoginPage.class)
                 .login(user.username(), user.password())
                 .clickProfileButton()
                 .clickFriendsMenuButton()
-                .checkFriendShouldBeVisible("alex");
+                .checkFriendShouldBeVisible(user.friend());
     }
 
     @Test
-    @ExtendWith(UsersQueueExtension.class)
     void incomeInvitationBePresentInFriendsTable(@UserType(WITH_INCOME_REQUEST) StaticUser user) {
         Selenide.open(CFG.frontUrl(), LoginPage.class)
                 .login(user.username(), user.password())
                 .clickProfileButton()
                 .clickFriendsMenuButton()
-                .checkIncomeFriendShouldBeVisible("bee");
+                .checkIncomeFriendShouldBeVisible(user.income());
     }
 
     @Test
-    @ExtendWith(UsersQueueExtension.class)
     void outcomeInvitationBePresentInAllPeoplesTable(@UserType(WITH_OUTCOME_REQUEST) StaticUser user) {
         Selenide.open(CFG.frontUrl(), LoginPage.class)
                 .login(user.username(), user.password())
                 .clickProfileButton()
                 .clickAllPeopleMenuButton()
-                .shouldVisibleOutcomeFriend("bill");
+                .shouldVisibleOutcomeFriend(user.outcome());
     }
 
     @Test
-    @ExtendWith(UsersQueueExtension.class)
     void friendsTableShouldBeEmptyForNewUser(@UserType(EMPTY) StaticUser user) {
         Selenide.open(CFG.frontUrl(), LoginPage.class)
                 .login(user.username(), user.password())
