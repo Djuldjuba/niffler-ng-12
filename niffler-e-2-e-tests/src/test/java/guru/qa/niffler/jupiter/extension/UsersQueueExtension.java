@@ -1,42 +1,23 @@
 package guru.qa.niffler.jupiter.extension;
 
-import io.qameta.allure.Allure;
-import org.apache.commons.lang3.time.StopWatch;
-import org.junit.jupiter.api.extension.AfterEachCallback;
-import org.junit.jupiter.api.extension.BeforeEachCallback;
+import guru.qa.niffler.jupiter.extension.UsersQueueExtension.UserType.Type;
+import org.junit.jupiter.api.extension.AfterTestExecutionCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.ParameterContext;
-import org.junit.jupiter.api.extension.ParameterResolutionException;
 import org.junit.jupiter.api.extension.ParameterResolver;
-import org.junit.platform.commons.support.AnnotationSupport;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-import java.util.Arrays;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.TimeUnit;
 
-public class UsersQueueExtension implements
-        BeforeEachCallback,
-        AfterEachCallback,
-        ParameterResolver {
+public class UsersQueueExtension implements ParameterResolver, AfterTestExecutionCallback {
 
-    public static final ExtensionContext.Namespace NAMESPACE = ExtensionContext.Namespace.create(UsersQueueExtension.class);
-
-    public record StaticUser(
-            String username,
-            String password,
-            String friend,
-            String income,
-            String outcome
-    ) {}
+    private static final ExtensionContext.Namespace NAMESPACE = ExtensionContext.Namespace.create(UsersQueueExtension.class);
 
     private static final Queue<StaticUser> EMPTY_USERS = new ConcurrentLinkedQueue<>();
     private static final Queue<StaticUser> WITH_FRIEND_USERS = new ConcurrentLinkedQueue<>();
@@ -63,95 +44,89 @@ public class UsersQueueExtension implements
         }
     }
 
-    @SuppressWarnings("unchecked")
+    public record StaticUser(
+            String username,
+            String password,
+            String friend,
+            String income,
+            String outcome
+    ) {
+    }
+
     @Override
-    public void beforeEach(ExtensionContext context) {
-
-        Arrays.stream(context.getRequiredTestMethod().getParameters())
-                .filter(p -> AnnotationSupport.isAnnotated(p, UserType.class))
-                .forEach(parameter -> {
-                    UserType userType = parameter.getAnnotation(UserType.class);
-                    UserType.Type requiredType = userType.value();
-
-                    Optional<StaticUser> user = Optional.empty();
-                    StopWatch sw = StopWatch.createStarted();
-
-                    while (user.isEmpty() && sw.getTime(TimeUnit.SECONDS) < 30) {
-                        user = getUserFromQueue(requiredType);
-                    }
-
-                    Allure.getLifecycle().updateTestCase(testCase -> {
-                        testCase.setStart(new Date().getTime());
-                    });
-
-                    Map<UserType, StaticUser> userMap = (Map<UserType, StaticUser>) context.getStore(NAMESPACE)
-                            .getOrComputeIfAbsent(context.getUniqueId(), key -> new HashMap<>());
-
-                    user.ifPresentOrElse(
-                            u -> userMap.put(userType, u),
-                            () -> {
-                                throw new IllegalStateException(
-                                        String.format("Can't find user of type %s after 30 sec", requiredType)
-                                );
-                            }
-                    );
-                });
+    public boolean supportsParameter(ParameterContext parameterContext, ExtensionContext extensionContext) {
+        return parameterContext.getParameter().getType() == StaticUser.class
+                && parameterContext.getParameter().isAnnotationPresent(UserType.class);
     }
 
-    private Optional<StaticUser> getUserFromQueue(UserType.Type type) {
-        switch (type) {
-            case EMPTY:
-                return Optional.ofNullable(EMPTY_USERS.poll());
-            case WITH_FRIEND:
-                return Optional.ofNullable(WITH_FRIEND_USERS.poll());
-            case WITH_INCOME_REQUEST:
-                return Optional.ofNullable(WITH_INCOME_REQUEST_USERS.poll());
-            case WITH_OUTCOME_REQUEST:
-                return Optional.ofNullable(WITH_OUTCOME_REQUEST_USERS.poll());
-            default:
-                throw new IllegalArgumentException("Unknown user type: " + type);
-        }
-    }
-
-    private void returnUserToQueue(StaticUser user) {
-        if (user.friend() != null) {
-            WITH_FRIEND_USERS.add(user);
-        } else if (user.income() != null) {
-            WITH_INCOME_REQUEST_USERS.add(user);
-        } else if (user.outcome() != null) {
-            WITH_OUTCOME_REQUEST_USERS.add(user);
-        } else {
-            EMPTY_USERS.add(user);
-        }
-    }
-
-    @SuppressWarnings("unchecked")
     @Override
-    public void afterEach(ExtensionContext context) {
-        Map<UserType, StaticUser> userMap = (Map<UserType, StaticUser>) context.getStore(NAMESPACE)
-                .get(context.getUniqueId(), Map.class);
+    public StaticUser resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext) {
+        UserType userTypeAnnotation = parameterContext.getParameter().getAnnotation(UserType.class);
+        Type type = userTypeAnnotation.value();
 
-        if (userMap != null) {
-            for (StaticUser user : userMap.values()) {
-                returnUserToQueue(user);
+        Map<Type, StaticUser> userMap = getUserMap(extensionContext);
+
+        if (userMap.containsKey(type)) {
+            return userMap.get(type);
+        }
+
+        StaticUser user = takeUserFromQueue(type);
+        userMap.put(type, user);
+
+        return user;
+    }
+
+    @Override
+    public void afterTestExecution(ExtensionContext extensionContext) {
+        ExtensionContext.Store store = extensionContext.getStore(NAMESPACE);
+        Object userMapObject = store.get(extensionContext.getUniqueId());
+
+        if (userMapObject instanceof Map) {
+            @SuppressWarnings("unchecked")
+            Map<Type, StaticUser> userMap = (Map<Type, StaticUser>) userMapObject;
+
+            for (Map.Entry<Type, StaticUser> entry : userMap.entrySet()) {
+                returnUserToQueue(entry.getKey(), entry.getValue());
             }
-            context.getStore(NAMESPACE).remove(context.getUniqueId());
+            store.remove(extensionContext.getUniqueId());
         }
     }
 
-    @Override
-    public boolean supportsParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
-        return parameterContext.getParameter().getType().equals(StaticUser.class)
-                && AnnotationSupport.isAnnotated(parameterContext.getParameter(), UserType.class);
+    @SuppressWarnings("unchecked")
+    private Map<Type, StaticUser> getUserMap(ExtensionContext context) {
+        ExtensionContext.Store store = context.getStore(NAMESPACE);
+
+        Object existingMap = store.get(context.getUniqueId());
+        if (existingMap instanceof Map) {
+            return (Map<Type, StaticUser>) existingMap;
+        }
+
+        Map<Type, StaticUser> newMap = new HashMap<>();
+        store.put(context.getUniqueId(), newMap);
+        return newMap;
     }
 
-    @SuppressWarnings("unchecked")
-    @Override
-    public StaticUser resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
-        Map<UserType, StaticUser> userMap = (Map<UserType, StaticUser>) extensionContext.getStore(NAMESPACE)
-                .get(extensionContext.getUniqueId(), Map.class);
+    private StaticUser takeUserFromQueue(Type type) {
+        StaticUser user = switch (type) {
+            case EMPTY -> EMPTY_USERS.poll();
+            case WITH_FRIEND -> WITH_FRIEND_USERS.poll();
+            case WITH_INCOME_REQUEST -> WITH_INCOME_REQUEST_USERS.poll();
+            case WITH_OUTCOME_REQUEST -> WITH_OUTCOME_REQUEST_USERS.poll();
+        };
 
-        UserType userType = parameterContext.getParameter().getAnnotation(UserType.class);
-        return userMap.get(userType);
+        if (user == null) {
+            throw new IllegalStateException("No available user for type: " + type);
+        }
+
+        return user;
+    }
+
+    private void returnUserToQueue(Type type, StaticUser user) {
+        switch (type) {
+            case EMPTY -> EMPTY_USERS.add(user);
+            case WITH_FRIEND -> WITH_FRIEND_USERS.add(user);
+            case WITH_INCOME_REQUEST -> WITH_INCOME_REQUEST_USERS.add(user);
+            case WITH_OUTCOME_REQUEST -> WITH_OUTCOME_REQUEST_USERS.add(user);
+        }
     }
 }

@@ -55,4 +55,16 @@ public class FriendsWebTest {
                 .clickFriendsMenuButton()
                 .checkNoFriendText();
     }
+
+    @Test
+    void loginTwoUsersTest(@UserType(EMPTY) StaticUser userEmpty,
+                           @UserType(WITH_FRIEND) StaticUser userWithFriend) {
+        Selenide.open(CFG.frontUrl(), LoginPage.class)
+                .login(userEmpty.username(), userEmpty.password())
+                .clickProfileButton()
+                .clickSignOut()
+                .login(userWithFriend.username(), userWithFriend.password())
+                .clickProfileButton()
+                .clickSignOut();
+    }
 }
