@@ -12,8 +12,10 @@ public record UserJson(
         @JsonProperty("enabled") Boolean enabled,
         @JsonProperty("account_non_expired") Boolean accountNonExpired,
         @JsonProperty("account_non_locked") Boolean accountNonLocked,
-        @JsonProperty("credentials_non_expired") Boolean credentialsNonExpired
+        @JsonProperty("credentials_non_expired") Boolean credentialsNonExpired,
+        TestData testData
 ) {
+
     public static UserJson fromEntity(AuthUserEntity entity) {
         return new UserJson(
                 entity.getId(),
@@ -22,7 +24,29 @@ public record UserJson(
                 entity.getEnabled(),
                 entity.getAccountNonExpired(),
                 entity.getAccountNonLocked(),
-                entity.getCredentialsNonExpired()
+                entity.getCredentialsNonExpired(),
+                null
+        );
+    }
+
+    public UserJson(String username, String password) {
+        this(null, username, password, true, true, true, true, null);
+    }
+
+    public UserJson(String username, String password, TestData testData) {
+        this(null, username, password, true, true, true, true, testData);
+    }
+
+    public UserJson addTestData(TestData testData) {
+        return new UserJson(
+                this.id,
+                this.username,
+                this.password,
+                this.enabled,
+                this.accountNonExpired,
+                this.accountNonLocked,
+                this.credentialsNonExpired,
+                testData
         );
     }
 }

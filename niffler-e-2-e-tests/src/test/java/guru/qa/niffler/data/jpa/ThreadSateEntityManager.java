@@ -1,7 +1,18 @@
 package guru.qa.niffler.data.jpa;
 
-import jakarta.persistence.*;
-import jakarta.persistence.criteria.*;
+import jakarta.persistence.EntityGraph;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.EntityTransaction;
+import jakarta.persistence.FlushModeType;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.Query;
+import jakarta.persistence.StoredProcedureQuery;
+import jakarta.persistence.TypedQuery;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaDelete;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.CriteriaUpdate;
 import jakarta.persistence.metamodel.Metamodel;
 
 import java.util.List;
@@ -68,23 +79,8 @@ public class ThreadSateEntityManager implements EntityManager {
     }
 
     @Override
-    public <T> T find(Class<T> entityClass, Object primaryKey, FindOption... options) {
-        return null;
-    }
-
-    @Override
-    public <T> T find(EntityGraph<T> entityGraph, Object primaryKey, FindOption... options) {
-        return null;
-    }
-
-    @Override
     public <T> T getReference(Class<T> aClass, Object o) {
         return threadEm().getReference(aClass, o);
-    }
-
-    @Override
-    public <T> T getReference(T entity) {
-        return null;
     }
 
     @Override
@@ -113,11 +109,6 @@ public class ThreadSateEntityManager implements EntityManager {
     }
 
     @Override
-    public void lock(Object entity, LockModeType lockMode, LockOption... options) {
-
-    }
-
-    @Override
     public void refresh(Object o) {
         threadEm().refresh(o);
     }
@@ -135,11 +126,6 @@ public class ThreadSateEntityManager implements EntityManager {
     @Override
     public void refresh(Object o, LockModeType lockModeType, Map<String, Object> map) {
         threadEm().refresh(o, lockModeType, map);
-    }
-
-    @Override
-    public void refresh(Object entity, RefreshOption... options) {
-
     }
 
     @Override
@@ -163,26 +149,6 @@ public class ThreadSateEntityManager implements EntityManager {
     }
 
     @Override
-    public void setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode) {
-
-    }
-
-    @Override
-    public void setCacheStoreMode(CacheStoreMode cacheStoreMode) {
-
-    }
-
-    @Override
-    public CacheRetrieveMode getCacheRetrieveMode() {
-        return null;
-    }
-
-    @Override
-    public CacheStoreMode getCacheStoreMode() {
-        return null;
-    }
-
-    @Override
     public void setProperty(String s, Object o) {
         threadEm().setProperty(s, o);
     }
@@ -200,11 +166,6 @@ public class ThreadSateEntityManager implements EntityManager {
     @Override
     public <T> TypedQuery<T> createQuery(CriteriaQuery<T> criteriaQuery) {
         return threadEm().createQuery(criteriaQuery);
-    }
-
-    @Override
-    public <T> TypedQuery<T> createQuery(CriteriaSelect<T> selectQuery) {
-        return null;
     }
 
     @Override
@@ -230,11 +191,6 @@ public class ThreadSateEntityManager implements EntityManager {
     @Override
     public <T> TypedQuery<T> createNamedQuery(String s, Class<T> aClass) {
         return threadEm().createNamedQuery(s, aClass);
-    }
-
-    @Override
-    public <T> TypedQuery<T> createQuery(TypedQueryReference<T> reference) {
-        return null;
     }
 
     @Override
@@ -335,15 +291,5 @@ public class ThreadSateEntityManager implements EntityManager {
     @Override
     public <T> List<EntityGraph<? super T>> getEntityGraphs(Class<T> aClass) {
         return threadEm().getEntityGraphs(aClass);
-    }
-
-    @Override
-    public <C> void runWithConnection(ConnectionConsumer<C> action) {
-
-    }
-
-    @Override
-    public <C, T> T callWithConnection(ConnectionFunction<C, T> function) {
-        return null;
     }
 }
