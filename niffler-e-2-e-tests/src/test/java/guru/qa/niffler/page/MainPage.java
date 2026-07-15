@@ -1,5 +1,7 @@
 package guru.qa.niffler.page;
 
+import com.codeborne.selenide.SelenideDriver;
+import com.codeborne.selenide.SelenideElement;
 import guru.qa.niffler.page.component.Header;
 import guru.qa.niffler.page.component.SpendingTable;
 import guru.qa.niffler.page.component.StatComponent;
@@ -11,9 +13,26 @@ public class MainPage extends BasePage<MainPage> {
 
   public static final String URL = CFG.frontUrl() + "main";
 
-  protected final Header header = new Header();
-  protected final SpendingTable spendingTable = new SpendingTable();
-  protected final StatComponent statComponent = new StatComponent();
+  protected final Header header;
+  protected final SpendingTable spendingTable;
+  protected final StatComponent statComponent;
+  protected final SelenideElement h1;
+
+  public MainPage(SelenideDriver driver) {
+    super(driver);
+    this.header = new Header(driver);
+    this.spendingTable = new SpendingTable(driver);
+    this.statComponent = new StatComponent(driver);
+    this.h1 = driver.$("h1");
+  }
+
+  public MainPage() {
+    super();
+    this.header = new Header();
+    this.spendingTable = new SpendingTable();
+    this.statComponent = new StatComponent();
+    this.h1 = com.codeborne.selenide.Selenide.$("h1");
+  }
 
   public Header getHeader() {
     return header;
@@ -32,6 +51,7 @@ public class MainPage extends BasePage<MainPage> {
     header.getSelf().should(visible).shouldHave(text("Niffler"));
     statComponent.getSelf().should(visible).shouldHave(text("Statistics"));
     spendingTable.getSelf().should(visible).shouldHave(text("History of Spendings"));
+    h1.shouldHave(text("Niffler"));
     return this;
   }
 }
