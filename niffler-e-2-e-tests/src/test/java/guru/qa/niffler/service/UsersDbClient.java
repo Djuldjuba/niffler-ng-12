@@ -16,6 +16,7 @@ import guru.qa.niffler.model.UserdataUserJson;
 import guru.qa.niffler.utils.RandomDataUtils;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -49,7 +50,6 @@ public class UsersDbClient implements UsersClient {
         return xaTransactionTemplate.execute(() -> {
             AuthUserEntity authUserEntity = AuthUserEntity.fromJson(user);
 
-            // Добавляем все доступные authorities
             authUserEntity.setAuthorities(
                     Arrays.stream(Authority.values()).map(
                             authority -> {
@@ -154,6 +154,16 @@ public class UsersDbClient implements UsersClient {
             userdataUserRepository.remove(userEntity);
             return null;
         });
+    }
+
+    @Override
+    public List<UserdataUserJson> allUsers(String username, String searchQuery) {
+        return List.of();
+    }
+
+    @Override
+    public List<UserdataUserJson> friends(String username, String searchQuery) {
+        return List.of();
     }
 
     private AuthUserEntity createAuthUserEntity(String username, String password) {

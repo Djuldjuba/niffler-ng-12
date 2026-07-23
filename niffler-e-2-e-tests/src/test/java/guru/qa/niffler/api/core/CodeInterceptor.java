@@ -1,5 +1,6 @@
 package guru.qa.niffler.api.core;
 
+import guru.qa.niffler.jupiter.extension.ApiLoginExtension;
 import okhttp3.Interceptor;
 import okhttp3.Response;
 import org.apache.commons.lang3.StringUtils;
@@ -8,8 +9,6 @@ import javax.annotation.Nonnull;
 import java.io.IOException;
 
 public class CodeInterceptor implements Interceptor {
-
-    private static final ThreadLocal<String> codeHolder = new ThreadLocal<>();
 
     @Nonnull
     @Override
@@ -23,15 +22,9 @@ public class CodeInterceptor implements Interceptor {
                 if (code.contains("&")) {
                     code = StringUtils.substringBefore(code, "&");
                 }
-                codeHolder.set(code);
+                ApiLoginExtension.setCode(code);
             }
         }
         return response;
-    }
-
-    public static String getCode() {
-        String code = codeHolder.get();
-        codeHolder.remove();
-        return code;
     }
 }

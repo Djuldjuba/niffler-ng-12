@@ -3,6 +3,7 @@ package guru.qa.niffler.service;
 import guru.qa.niffler.model.UserJson;
 import guru.qa.niffler.model.UserdataUserJson;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -25,4 +26,8 @@ public interface UsersClient {
     UserdataUserJson updateUser(UserdataUserJson user);
 
     void deleteUser(UserdataUserJson user);
+
+    List<UserdataUserJson> allUsers(String username, String searchQuery);
+
+    List<UserdataUserJson> friends(String username, String searchQuery);
 }

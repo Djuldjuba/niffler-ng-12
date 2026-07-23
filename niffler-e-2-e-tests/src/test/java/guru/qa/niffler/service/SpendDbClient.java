@@ -5,12 +5,14 @@ import guru.qa.niffler.data.entity.spend.CategoryEntity;
 import guru.qa.niffler.data.entity.spend.SpendEntity;
 import guru.qa.niffler.data.repository.SpendRepository;
 import guru.qa.niffler.data.repository.impl.SpendRepositoryHibernate;
-import guru.qa.niffler.data.repository.impl.SpendRepositoryJdbc;
-import guru.qa.niffler.data.repository.impl.SpendRepositorySpringJdbc;
 import guru.qa.niffler.data.tpl.XaTransactionTemplate;
 import guru.qa.niffler.model.CategoryJson;
+import guru.qa.niffler.model.CurrencyValues;
 import guru.qa.niffler.model.SpendJson;
+import guru.qa.niffler.service.api.SpendClient;
 
+import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -102,5 +104,15 @@ public class SpendDbClient implements SpendClient {
             spendRepository.removeCategory(categoryEntity);
             return null;
         });
+    }
+
+    @Override
+    public List<CategoryJson> getCategories(String username, boolean excludeArchived) {
+        return List.of();
+    }
+
+    @Override
+    public List<SpendJson> getSpends(String username, CurrencyValues filterCurrency, Date from, Date to) {
+        return List.of();
     }
 }
