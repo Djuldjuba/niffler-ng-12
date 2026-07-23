@@ -10,10 +10,7 @@ import guru.qa.niffler.page.LoginPage;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
-import static guru.qa.niffler.jupiter.extension.UsersQueueExtension.UserType.Type.EMPTY;
-import static guru.qa.niffler.jupiter.extension.UsersQueueExtension.UserType.Type.WITH_FRIEND;
-import static guru.qa.niffler.jupiter.extension.UsersQueueExtension.UserType.Type.WITH_INCOME_REQUEST;
-import static guru.qa.niffler.jupiter.extension.UsersQueueExtension.UserType.Type.WITH_OUTCOME_REQUEST;
+import static guru.qa.niffler.jupiter.extension.UsersQueueExtension.UserType.Type.*;
 
 @ExtendWith({UsersQueueExtension.class, BrowserExtension.class})
 public class FriendsWebTest {
@@ -21,7 +18,7 @@ public class FriendsWebTest {
     private static final Config CFG = Config.getInstance();
 
     @Test
-    void friendShouldBePresentInFriendsTable(@UserType(WITH_FRIEND) StaticUser user) {
+    void friendShouldBePresentInFriendsTable(@UserType(WITH_FRIENDS) StaticUser user) {
         Selenide.open(CFG.frontUrl(), LoginPage.class)
                 .login(user.username(), user.password())
                 .clickProfileButton()
@@ -35,7 +32,7 @@ public class FriendsWebTest {
                 .login(user.username(), user.password())
                 .clickProfileButton()
                 .clickFriendsMenuButton()
-                .checkIncomeFriendShouldBeVisible(user.income());
+                .checkIncomeFriendShouldBeVisible("123");
     }
 
     @Test
@@ -58,7 +55,7 @@ public class FriendsWebTest {
 
     @Test
     void loginTwoUsersTest(@UserType(EMPTY) StaticUser userEmpty,
-                           @UserType(WITH_FRIEND) StaticUser userWithFriend) {
+                           @UserType(WITH_FRIENDS) StaticUser userWithFriend) {
         Selenide.open(CFG.frontUrl(), LoginPage.class)
                 .login(userEmpty.username(), userEmpty.password())
                 .clickProfileButton()

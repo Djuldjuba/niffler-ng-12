@@ -17,7 +17,7 @@ public class AllPeoplePage extends BasePage {
         return $$("#all tr")
                 .filterBy(Condition.text(name))
                 .first()
-                .find("span.MuiChip-label")
+                .find("td .MuiChip-root span.MuiChip-label")
                 .shouldHave(Condition.text("Waiting..."));
     }
 }
