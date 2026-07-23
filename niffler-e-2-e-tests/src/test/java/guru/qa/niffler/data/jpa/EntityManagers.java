@@ -15,7 +15,7 @@ public class EntityManagers {
     private static final Map<String, EntityManagerFactory> emfs = new ConcurrentHashMap<>();
 
     public static EntityManager em(String jdbcUrl) {
-        return new ThreadSateEntityManager(
+        return new ThreadSafeEntityManager(
                 emfs.computeIfAbsent(
                         jdbcUrl,
                         key -> {
