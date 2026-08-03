@@ -1,8 +1,8 @@
-package guru.qa.niffler.service.api;
+package guru.qa.niffler.service;
 
+import guru.qa.niffler.model.CategoryJson;
 import guru.qa.niffler.model.CurrencyValues;
 import guru.qa.niffler.model.SpendJson;
-import guru.qa.niffler.model.CategoryJson;
 
 import java.util.Date;
 import java.util.List;
@@ -16,6 +16,8 @@ public interface SpendClient {
     SpendJson updateSpend(SpendJson spend);
 
     CategoryJson createCategory(CategoryJson category);
+
+    CategoryJson updateCategory(CategoryJson category);
 
     Optional<CategoryJson> findCategoryById(UUID id);
 
@@ -33,4 +35,3 @@ public interface SpendClient {
 
     List<SpendJson> getSpends(String username, CurrencyValues filterCurrency, Date from, Date to);
 }
-

@@ -36,6 +36,11 @@ public class SpendRepositorySpringJdbc implements SpendRepository {
     }
 
     @Override
+    public CategoryEntity updateCategory(CategoryEntity category) {
+        return null;
+    }
+
+    @Override
     public Optional<CategoryEntity> findCategoryById(UUID id) {
         return categoryDao.findCategoryById(id);
     }

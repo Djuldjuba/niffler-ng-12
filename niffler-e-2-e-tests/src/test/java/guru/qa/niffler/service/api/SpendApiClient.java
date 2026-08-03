@@ -5,6 +5,7 @@ import guru.qa.niffler.config.Config;
 import guru.qa.niffler.model.CategoryJson;
 import guru.qa.niffler.model.CurrencyValues;
 import guru.qa.niffler.model.SpendJson;
+import guru.qa.niffler.service.SpendClient;
 import org.junit.jupiter.api.Assertions;
 import retrofit2.Response;
 import retrofit2.Retrofit;
@@ -48,6 +49,10 @@ public class SpendApiClient implements SpendClient {
     return null;
   }
 
+  @Override
+  public CategoryJson updateCategory(CategoryJson category) {
+    return null;
+  }
   @Override
   public Optional<CategoryJson> findCategoryById(UUID id) {
     return Optional.empty();

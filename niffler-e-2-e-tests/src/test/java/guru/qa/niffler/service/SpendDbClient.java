@@ -9,7 +9,6 @@ import guru.qa.niffler.data.tpl.XaTransactionTemplate;
 import guru.qa.niffler.model.CategoryJson;
 import guru.qa.niffler.model.CurrencyValues;
 import guru.qa.niffler.model.SpendJson;
-import guru.qa.niffler.service.api.SpendClient;
 
 import java.util.Date;
 import java.util.List;
@@ -61,6 +60,15 @@ public class SpendDbClient implements SpendClient {
             CategoryEntity categoryEntity = CategoryEntity.fromJson(category);
             CategoryEntity createdCategory = spendRepository.createCategory(categoryEntity);
             return CategoryJson.fromEntity(createdCategory);
+        });
+    }
+
+    @Override
+    public CategoryJson updateCategory(CategoryJson category) {
+        return xaTransactionTemplate.execute(() -> {
+            CategoryEntity categoryEntity = CategoryEntity.fromJson(category);
+            CategoryEntity updatedCategory = spendRepository.updateCategory(categoryEntity);
+            return CategoryJson.fromEntity(updatedCategory);
         });
     }
 

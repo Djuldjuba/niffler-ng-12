@@ -4,7 +4,7 @@ buildscript {
         allureVersion = '2.32.0'
         aspectJVersion = '1.9.22'
         selenideVersion = '7.13.0'
-        okhttp3Version = '5.3.2'
+        okhttp3Version = '4.11.0'
         retrofitVersion = '3.0.0'
         apollographqlVersion = '0.0.2'
         logbackVersion = '1.5.22'
@@ -23,6 +23,9 @@ buildscript {
         userdataWsdlUrl = System.getProperty("test.env") == "docker"
                 ? "http://userdata.niffler.dc:8089/ws/userdata.wsdl"
                 : "http://localhost:8089/ws/userdata.wsdl"
+        gatewayIntrospectionUrl = System.getProperty("test.env") == "docker"
+                ? "http://gateway.niffler.dc:8090/graphql"
+                : "http://localhost:8090/graphql";
     }
 }
 
@@ -54,11 +57,28 @@ xjcGeneration {
     }
 }
 
+apollo {
+    service("niffler") {
+        generateKotlinModels.set(false)
+        packageName.set("guru.qa.niffler")
+        srcDir("src/test/graphql")
+        mapScalar("Date", "java.util.Date")
+        introspection {
+            endpointUrl.set("$gatewayIntrospectionUrl")
+            schemaFile.set(file("src/test/graphql/schema.graphqls"))
+        }
+        outputDirConnection {
+            connectToJavaSourceSet("test")
+        }
+    }
+}
+
 sourceSets {
     test {
         java {
             srcDir('src/test/java')
             srcDir("$buildDir/generated-sources/test/xjc")
+            srcDir("$buildDir/generated/source/apollo/niffler")
         }
     }
 }
@@ -81,6 +101,10 @@ dependencies {
         exclude group: "com.squareup.okhttp3"
     }
     testImplementation "org.springframework.data:spring-data-commons:${springDataCommonsVersion}"
+    // GraphQL
+    testImplementation 'com.apollographql.java:client:0.0.2'
+    testImplementation 'com.apollographql.java:rx2:0.0.2'
+    testImplementation 'com.apollographql.adapters:apollo-adapters-core:0.0.4'
     // DB
     testImplementation "org.springframework:spring-jdbc:${springJdbcVersion}"
     testImplementation "org.postgresql:postgresql:${project.ext.postgresDriverVersion}"
@@ -143,5 +167,9 @@ tasks.withType(JavaCompile).configureEach {
 tasks.register('printVersion') {
     doLast {
         println project.version
+    }
+
+    tasks.named { it == "generateNifflerApolloSources" }.configureEach {
+        dependsOn("downloadNifflerApolloSchemaFromIntrospection")
     }
 }

@@ -1,6 +1,7 @@
 package guru.qa.niffler.jupiter.annotation;
 
-import guru.qa.niffler.jupiter.extension.CategoryExtension;
+import guru.qa.niffler.jupiter.extension.ApiLoginRestExtension;
+import guru.qa.niffler.jupiter.extension.TestMethodContextExtension;
 import guru.qa.niffler.jupiter.extension.UserExtension;
 import org.junit.jupiter.api.extension.ExtendWith;
 
@@ -12,13 +13,11 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
 @ExtendWith({
+        TestMethodContextExtension.class,
         UserExtension.class,
-        CategoryExtension.class
+        ApiLoginRestExtension.class
 })
-public @interface User {
-    boolean createUser() default true;
-
+public @interface ApiLoginRest {
     String username() default "";
-
-    Category[] categories() default {};
+    String password() default "";
 }
