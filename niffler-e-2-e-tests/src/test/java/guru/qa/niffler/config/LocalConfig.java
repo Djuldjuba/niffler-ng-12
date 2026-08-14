@@ -67,4 +67,14 @@ enum LocalConfig implements Config {
   public String webClientId() {
     return "client";
   }
+
+  @Override
+  public String currencyGrpcAddress() {
+    return "localhost";
+  }
+
+  @Override
+  public String userdataGrpcAddress() {
+    return "localhost";
+  }
 }

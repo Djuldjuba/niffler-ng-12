@@ -19,4 +19,14 @@ public interface Config {
   String dbUsername();
   String dbPassword();
   String webClientId();
+  String currencyGrpcAddress();
+  default int currencyGrpcPort() {
+    return 8092;
+  }
+  default String userdataGrpcAddress() {
+    return "localhost";
+  }
+  default int userdataGrpcPort() {
+    return 8095;
+  }
 }
