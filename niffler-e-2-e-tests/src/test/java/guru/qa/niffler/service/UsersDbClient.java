@@ -49,7 +49,6 @@ public class UsersDbClient implements UsersClient {
     public UserJson createUserWithAuthorities(UserJson user) {
         return xaTransactionTemplate.execute(() -> {
             AuthUserEntity authUserEntity = AuthUserEntity.fromJson(user);
-
             authUserEntity.setAuthorities(
                     Arrays.stream(Authority.values()).map(
                             authority -> {
@@ -59,9 +58,12 @@ public class UsersDbClient implements UsersClient {
                                 return ae;
                             }).toList()
             );
+            AuthUserEntity createdAuthUser = authUserRepository.create(authUserEntity);
 
-            AuthUserEntity createdUser = authUserRepository.create(authUserEntity);
-            return UserJson.fromEntity(createdUser);
+            UserEntity userEntity = createUserEntity(user.username());
+            userdataUserRepository.create(userEntity);
+
+            return UserJson.fromEntity(createdAuthUser);
         });
     }
 
@@ -81,16 +83,24 @@ public class UsersDbClient implements UsersClient {
     public void createIncomeInvitations(UserdataUserJson targetUser, int count) {
         if (count <= 0) return;
 
-        UserEntity targetEntity = userdataUserRepository.findById(targetUser.id())
-                .orElseThrow(() -> new RuntimeException("Target user not found: " + targetUser.id()));
+        Optional<UserEntity> targetOpt = userdataUserRepository.findById(targetUser.id());
+        if (targetOpt.isEmpty()) {
+            targetOpt = userdataUserRepository.findByUsername(targetUser.username());
+        }
+
+        UserEntity targetEntity = targetOpt
+                .orElseThrow(() -> new RuntimeException("Target user not found: " + targetUser.username()));
 
         for (int i = 0; i < count; i++) {
+            final int index = i;
             xaTransactionTemplate.execute(() -> {
-                String username = RandomDataUtils.randomUsername();
+                String username = RandomDataUtils.randomUsername() + "_income_" + index;
+
                 AuthUserEntity authUser = createAuthUserEntity(username, "12345");
                 authUserRepository.create(authUser);
 
                 UserEntity addressee = userdataUserRepository.create(createUserEntity(username));
+
                 userdataUserRepository.addIncomeInvitation(targetEntity, addressee);
                 return null;
             });
@@ -102,16 +112,20 @@ public class UsersDbClient implements UsersClient {
         if (count <= 0) return;
 
         UserEntity targetEntity = userdataUserRepository.findById(targetUser.id())
-                .orElseThrow(() -> new RuntimeException("Target user not found: " + targetUser.id()));
+                .orElseThrow(() -> new RuntimeException("Target user not found: " + targetUser.username()));
 
         for (int i = 0; i < count; i++) {
+            final int index = i;
             xaTransactionTemplate.execute(() -> {
-                String username = RandomDataUtils.randomUsername();
+                String username = RandomDataUtils.randomUsername() + "_outcome_" + index;
+
                 AuthUserEntity authUser = createAuthUserEntity(username, "12345");
                 authUserRepository.create(authUser);
 
-                UserEntity requester = userdataUserRepository.create(createUserEntity(username));
-                userdataUserRepository.addOutcomeInvitation(requester, targetEntity);
+                UserEntity addressee = userdataUserRepository.create(createUserEntity(username));
+                userdataUserRepository.addOutcomeInvitation(targetEntity, addressee);
+
+                userdataUserRepository.update(targetEntity);
                 return null;
             });
         }
@@ -121,12 +135,19 @@ public class UsersDbClient implements UsersClient {
     public void createFriends(UserdataUserJson targetUser, int count) {
         if (count <= 0) return;
 
-        UserEntity targetEntity = userdataUserRepository.findById(targetUser.id())
-                .orElseThrow(() -> new RuntimeException("Target user not found: " + targetUser.id()));
+        Optional<UserEntity> targetOpt = userdataUserRepository.findById(targetUser.id());
+        if (targetOpt.isEmpty()) {
+            targetOpt = userdataUserRepository.findByUsername(targetUser.username());
+        }
+
+        UserEntity targetEntity = targetOpt
+                .orElseThrow(() -> new RuntimeException("Target user not found: " + targetUser.username()));
 
         for (int i = 0; i < count; i++) {
+            final int index = i;
             xaTransactionTemplate.execute(() -> {
-                String username = RandomDataUtils.randomUsername();
+                String username = RandomDataUtils.randomUsername() + "_friend_" + index;
+
                 AuthUserEntity authUser = createAuthUserEntity(username, "12345");
                 authUserRepository.create(authUser);
 

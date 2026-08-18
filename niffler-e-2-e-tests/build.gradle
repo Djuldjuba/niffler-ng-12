@@ -20,6 +20,7 @@ buildscript {
         wiremockVersion = '3.13.2'
         ashotVersion = '1.5.4'
         fakerVersion = '1.0.2'
+        glassfishJaxbVersion = '4.0.5'
         userdataWsdlUrl = System.getProperty("test.env") == "docker"
                 ? "http://userdata.niffler.dc:8089/ws/userdata.wsdl"
                 : "http://localhost:8089/ws/userdata.wsdl"
@@ -30,9 +31,8 @@ buildscript {
 }
 
 plugins {
-    id 'io.qameta.allure' version '3.0.1'
-    id 'io.qameta.allure-adapter' version '3.0.1'
-    id 'com.github.edeandrea.xjc-generation' version '1.6'
+    id 'io.qameta.allure' version '4.0.1'
+    id 'io.qameta.allure-adapter' version '4.0.1'
     id 'com.apollographql.apollo' version '4.3.3'
 }
 
@@ -49,15 +49,40 @@ configurations {
         canBeResolved = true
         canBeConsumed = true
     }
+    jaxb
 }
 
-xjcGeneration {
-    defaultAdditionalXjcOptions = ['encoding': 'UTF-8']
-    schemas {
-        wsdlSchema {
-            schemaFile = 'userdata.wsdl'
-            javaPackageName = 'jaxb.userdata'
-            sourceSet = 'test'
+tasks.register('genJaxb') {
+    ext.sourcesDir = layout.buildDirectory.dir("generated-sources/jaxb").get()
+    ext.classesDir = layout.buildDirectory.dir("classes/jaxb").get()
+    ext.schema = "${userdataWsdlUrl}"
+
+    outputs.dir classesDir
+
+    doLast() {
+        project.ant {
+            taskdef name: "xjc", classname: "com.sun.tools.xjc.XJCTask",
+                    classpath: configurations.jaxb.asPath
+            mkdir(dir: sourcesDir)
+            mkdir(dir: classesDir)
+
+            xjc(destdir: sourcesDir, schema: schema, package: "jaxb.userdata") {
+                arg(value: "-wsdl")
+                produces(dir: sourcesDir, includes: "**/*.java")
+            }
+
+            javac(destdir: classesDir, source: 21, target: 21, debug: true,
+                    debugLevel: "lines,vars,source",
+                    classpath: configurations.jaxb.asPath) {
+                src(path: sourcesDir)
+                include(name: "**/*.java")
+            }
+
+            copy(todir: classesDir) {
+                fileset(dir: sourcesDir, erroronmissingdir: false) {
+                    exclude(name: "**/*.java")
+                }
+            }
         }
     }
 }
@@ -82,7 +107,7 @@ sourceSets {
     test {
         java {
             srcDir('src/test/java')
-            srcDir("$buildDir/generated-sources/test/xjc")
+            srcDir("$buildDir/generated-sources/jaxb")
             srcDir("$buildDir/generated/source/apollo/niffler")
         }
     }
@@ -158,7 +183,8 @@ dependencies {
     // SOAP
     testImplementation "com.sun.xml.messaging.saaj:saaj-impl:${saajVersion}"
     testImplementation "jakarta.xml.bind:jakarta.xml.bind-api:${project.ext.jakartaJaxbVersion}"
-    xjc "org.glassfish.jaxb:jaxb-xjc:${project.ext.jakartaJaxbVersion}"
+    implementation(files(genJaxb.classesDir).builtBy(genJaxb))
+    jaxb "org.glassfish.jaxb:jaxb-xjc:${glassfishJaxbVersion}"
     // Kafka
     testImplementation "org.apache.kafka:kafka-clients:${kafkaClientsVersion}"
     // Wiremock
@@ -170,6 +196,10 @@ dependencies {
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
+}
+
+tasks.named('compileTestJava') {
+    dependsOn genJaxb
 }
 
 tasks.register('printVersion') {
