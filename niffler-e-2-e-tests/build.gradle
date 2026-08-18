@@ -4,7 +4,7 @@ buildscript {
         allureVersion = '2.32.0'
         aspectJVersion = '1.9.22'
         selenideVersion = '7.13.0'
-        okhttp3Version = '5.3.2'
+        okhttp3Version = '4.11.0'
         retrofitVersion = '3.0.0'
         apollographqlVersion = '0.0.2'
         logbackVersion = '1.5.22'
@@ -12,43 +12,93 @@ buildscript {
         springJdbcVersion = '6.2.12'
         springCryptoVersion = '6.5.6'
         p6spyVersion = '3.9.1'
-        hibernateVersion = '7.2.0.Final'
+        hibernateVersion = '6.3.1.Final'
         kafkaClientsVersion = '4.1.1'
         saajVersion = '3.0.4'
         springDataCommonsVersion = '3.5.5'
+        atomikosVersion = '6.0.0'
         wiremockVersion = '3.13.2'
         ashotVersion = '1.5.4'
         fakerVersion = '1.0.2'
+        glassfishJaxbVersion = '4.0.5'
         userdataWsdlUrl = System.getProperty("test.env") == "docker"
                 ? "http://userdata.niffler.dc:8089/ws/userdata.wsdl"
                 : "http://localhost:8089/ws/userdata.wsdl"
+        gatewayIntrospectionUrl = System.getProperty("test.env") == "docker"
+                ? "http://gateway.niffler.dc:8090/graphql"
+                : "http://localhost:8090/graphql";
     }
 }
 
 plugins {
-    id 'io.qameta.allure' version '3.0.1'
-    id 'io.qameta.allure-adapter' version '3.0.1'
-    id 'com.github.edeandrea.xjc-generation' version '1.6'
+    id 'io.qameta.allure' version '4.0.1'
+    id 'io.qameta.allure-adapter' version '4.0.1'
     id 'com.apollographql.apollo' version '4.3.3'
 }
 
 group = 'guru.qa'
 version = '2.1.5'
 
+repositories {
+    mavenCentral()
+    mavenLocal()
+}
+
 configurations {
     agent {
         canBeResolved = true
         canBeConsumed = true
     }
+    jaxb
 }
 
-xjcGeneration {
-    defaultAdditionalXjcOptions = ['encoding': 'UTF-8']
-    schemas {
-        wsdlSchema {
-            schemaFile = 'userdata.wsdl'
-            javaPackageName = 'jaxb.userdata'
-            sourceSet = 'test'
+tasks.register('genJaxb') {
+    ext.sourcesDir = layout.buildDirectory.dir("generated-sources/jaxb").get()
+    ext.classesDir = layout.buildDirectory.dir("classes/jaxb").get()
+    ext.schema = "${userdataWsdlUrl}"
+
+    outputs.dir classesDir
+
+    doLast() {
+        project.ant {
+            taskdef name: "xjc", classname: "com.sun.tools.xjc.XJCTask",
+                    classpath: configurations.jaxb.asPath
+            mkdir(dir: sourcesDir)
+            mkdir(dir: classesDir)
+
+            xjc(destdir: sourcesDir, schema: schema, package: "jaxb.userdata") {
+                arg(value: "-wsdl")
+                produces(dir: sourcesDir, includes: "**/*.java")
+            }
+
+            javac(destdir: classesDir, source: 21, target: 21, debug: true,
+                    debugLevel: "lines,vars,source",
+                    classpath: configurations.jaxb.asPath) {
+                src(path: sourcesDir)
+                include(name: "**/*.java")
+            }
+
+            copy(todir: classesDir) {
+                fileset(dir: sourcesDir, erroronmissingdir: false) {
+                    exclude(name: "**/*.java")
+                }
+            }
+        }
+    }
+}
+
+apollo {
+    service("niffler") {
+        generateKotlinModels.set(false)
+        packageName.set("guru.qa.niffler")
+        srcDir("src/test/graphql")
+        mapScalar("Date", "java.util.Date")
+        introspection {
+            endpointUrl.set("$gatewayIntrospectionUrl")
+            schemaFile.set(file("src/test/graphql/schema.graphqls"))
+        }
+        outputDirConnection {
+            connectToJavaSourceSet("test")
         }
     }
 }
@@ -57,7 +107,8 @@ sourceSets {
     test {
         java {
             srcDir('src/test/java')
-            srcDir("$buildDir/generated-sources/test/xjc")
+            srcDir("$buildDir/generated-sources/jaxb")
+            srcDir("$buildDir/generated/source/apollo/niffler")
         }
     }
 }
@@ -80,12 +131,22 @@ dependencies {
         exclude group: "com.squareup.okhttp3"
     }
     testImplementation "org.springframework.data:spring-data-commons:${springDataCommonsVersion}"
+    // GraphQL
+    testImplementation 'com.apollographql.java:client:0.0.2'
+    testImplementation 'com.apollographql.java:rx2:0.0.2'
+    testImplementation 'com.apollographql.adapters:apollo-adapters-core:0.0.4'
     // DB
     testImplementation "org.springframework:spring-jdbc:${springJdbcVersion}"
     testImplementation "org.postgresql:postgresql:${project.ext.postgresDriverVersion}"
     testImplementation "p6spy:p6spy:${p6spyVersion}"
     testImplementation "org.hibernate:hibernate-core:${hibernateVersion}"
     testImplementation "org.springframework.security:spring-security-crypto:${springCryptoVersion}"
+    testImplementation "com.atomikos:atomikos-util:${atomikosVersion}"
+    testImplementation "com.atomikos:transactions-hibernate4:${atomikosVersion}:jakarta"
+    testImplementation "com.atomikos:transactions-jdbc:${atomikosVersion}:jakarta"
+    testImplementation "com.atomikos:transactions-jta:${atomikosVersion}:jakarta"
+    implementation 'jakarta.transaction:jakarta.transaction-api:2.0.1'
+    implementation 'jakarta.persistence:jakarta.persistence-api:3.1.0'
     // Allure
     agent "org.aspectj:aspectjweaver:${aspectJVersion}"
     testImplementation platform("io.qameta.allure:allure-bom:$allureVersion")
@@ -107,6 +168,7 @@ dependencies {
     testImplementation 'commons-io:commons-io:2.21.0'
     testImplementation 'com.google.code.findbugs:jsr305:3.0.2'
     testImplementation 'com.github.vertical-blank:sql-formatter:2.0.5'
+    testImplementation 'com.github.h-thurow:simple-jndi:0.25.0'
     // gRPC
     testImplementation "io.grpc:grpc-api:${project.ext.grpcVersion}"
     testImplementation "io.grpc:grpc-stub:${project.ext.grpcVersion}"
@@ -114,11 +176,15 @@ dependencies {
     testImplementation "com.google.protobuf:protobuf-java:${project.ext.protobufVersion}"
     testImplementation "com.google.protobuf:protobuf-java-util:${project.ext.protobufVersion}"
     testImplementation project(':niffler-grpc-common')
-    compileOnly 'jakarta.annotation:jakarta.annotation-api:1.3.5' // Java 9+ compatibility - Do NOT update to 2.0.0
+    testImplementation(project(':niffler-userdata')) {
+        transitive = false
+    }
+    compileOnly 'jakarta.annotation:jakarta.annotation-api:1.3.5'
     // SOAP
     testImplementation "com.sun.xml.messaging.saaj:saaj-impl:${saajVersion}"
     testImplementation "jakarta.xml.bind:jakarta.xml.bind-api:${project.ext.jakartaJaxbVersion}"
-    xjc "org.glassfish.jaxb:jaxb-xjc:${project.ext.jakartaJaxbVersion}"
+    implementation(files(genJaxb.classesDir).builtBy(genJaxb))
+    jaxb "org.glassfish.jaxb:jaxb-xjc:${glassfishJaxbVersion}"
     // Kafka
     testImplementation "org.apache.kafka:kafka-clients:${kafkaClientsVersion}"
     // Wiremock
@@ -132,8 +198,16 @@ tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
 }
 
+tasks.named('compileTestJava') {
+    dependsOn genJaxb
+}
+
 tasks.register('printVersion') {
     doLast {
         println project.version
     }
+}
+
+tasks.named { it == "generateNifflerApolloSources" }.configureEach {
+    dependsOn("downloadNifflerApolloSchemaFromIntrospection")
 }
