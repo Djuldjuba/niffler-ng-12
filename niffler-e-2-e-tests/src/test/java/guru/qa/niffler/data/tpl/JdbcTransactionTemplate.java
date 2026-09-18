@@ -1,54 +1,36 @@
 package guru.qa.niffler.data.tpl;
 
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Supplier;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 
-import static java.sql.Connection.TRANSACTION_READ_COMMITTED;
+import javax.sql.DataSource;
+import java.util.function.Supplier;
 
 public class JdbcTransactionTemplate {
 
-    private final JdbcConnectionHolder holder;
-    private final AtomicBoolean closeAfterAction = new AtomicBoolean(true);
+    private final TransactionTemplate transactionTemplate;
 
     public JdbcTransactionTemplate(String jdbcUrl) {
-        this.holder = Connections.holder(jdbcUrl);
+        DataSource ds = DataSources.dataSource(jdbcUrl);
+        this.transactionTemplate = new TransactionTemplate(new DataSourceTransactionManager(ds));
     }
 
-    public JdbcTransactionTemplate holdConnectionAfterAction() {
-        this.closeAfterAction.set(false);
+    public JdbcTransactionTemplate withIsolationLevel(int isolationLevel) {
+        this.transactionTemplate.setIsolationLevel(isolationLevel);
         return this;
     }
 
-    public <T> T execute(Supplier<T> action, int isolationLvl) {
-        Connection connection = null;
+    public <T> T execute(Supplier<T> action, int isolationLevel) {
+        Integer prevIsolation = transactionTemplate.getIsolationLevel();
+        transactionTemplate.setIsolationLevel(isolationLevel);
         try {
-            connection = holder.connection();
-            connection.setTransactionIsolation(isolationLvl);
-            connection.setAutoCommit(false);
-            T result = action.get();
-            connection.commit();
-            connection.setAutoCommit(true);
-            return result;
-        } catch (Exception e) {
-            if (connection != null) {
-                try {
-                    connection.rollback();
-                    connection.setAutoCommit(true);
-                } catch (SQLException ex) {
-                    throw new RuntimeException(ex);
-                }
-            }
-            throw new RuntimeException(e);
+            return transactionTemplate.execute(status -> action.get());
         } finally {
-            if (closeAfterAction.get()) {
-                holder.close();
-            }
+            transactionTemplate.setIsolationLevel(prevIsolation);
         }
     }
 
     public <T> T execute(Supplier<T> action) {
-        return execute(action, TRANSACTION_READ_COMMITTED);
+        return transactionTemplate.execute(status -> action.get());
     }
 }

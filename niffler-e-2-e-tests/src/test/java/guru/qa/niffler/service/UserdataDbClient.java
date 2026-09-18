@@ -26,7 +26,7 @@ public class UserdataDbClient {
     private final AuthAuthorityDao authAuthorityDao = new AuthAuthorityDaoJdbc();
 
     private final JdbcTransactionTemplate jdbcTxTemplate = new JdbcTransactionTemplate(
-            CFG.spendJdbcUrl()
+            CFG.authJdbcUrl()
     );
 
     public UserdataUserJson createUser(UserdataUserJson user) {

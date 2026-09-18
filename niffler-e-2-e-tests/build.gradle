@@ -88,7 +88,6 @@ dependencies {
     testImplementation "org.hibernate:hibernate-core:${hibernateVersion}"
     testImplementation "org.springframework.security:spring-security-crypto:${springCryptoVersion}"
     testImplementation "com.atomikos:atomikos-util:${atomikosVersion}"
-    testImplementation "com.atomikos:atomikos-util:${atomikosVersion}"
 
     testImplementation "com.atomikos:transactions-jdbc:${atomikosVersion}:jakarta"
     testImplementation "com.atomikos:transactions-jta:${atomikosVersion}:jakarta"

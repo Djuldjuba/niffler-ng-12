@@ -4,8 +4,12 @@ import guru.qa.niffler.config.Config;
 import guru.qa.niffler.data.dao.SpendDao;
 import guru.qa.niffler.data.entity.spend.CategoryEntity;
 import guru.qa.niffler.data.entity.spend.SpendEntity;
+import guru.qa.niffler.data.tpl.DataSources;
 import guru.qa.niffler.model.CurrencyValues;
+import org.springframework.jdbc.datasource.DataSourceUtils;
 
+import javax.sql.DataSource;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -15,17 +19,17 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import static guru.qa.niffler.data.tpl.Connections.holder;
-
 public class SpendDaoJdbc implements SpendDao {
 
     private static final Config CFG = Config.getInstance();
+    private final DataSource ds = DataSources.dataSource(CFG.spendJdbcUrl());
 
     @Override
     public SpendEntity create(SpendEntity spend) {
-        try (PreparedStatement ps = holder(CFG.spendJdbcUrl()).connection().prepareStatement(
-                "INSERT INTO spend (username, spend_date, currency, amount, description, category_id) "
-                        + "VALUES (?, ?, ?, ?, ?, ?)",
+        Connection connection = DataSourceUtils.getConnection(ds);
+        try (PreparedStatement ps = connection.prepareStatement(
+                "INSERT INTO spend (username, spend_date, currency, amount, description, category_id) " +
+                        "VALUES (?, ?, ?, ?, ?, ?)",
                 Statement.RETURN_GENERATED_KEYS
         )) {
             ps.setString(1, spend.getUsername());
@@ -49,30 +53,35 @@ public class SpendDaoJdbc implements SpendDao {
             return spend;
         } catch (SQLException e) {
             throw new RuntimeException(e);
+        } finally {
+            DataSourceUtils.releaseConnection(connection, ds);
         }
     }
 
     @Override
     public Optional<SpendEntity> findSpendById(UUID id) {
-        try (PreparedStatement ps = holder(CFG.spendJdbcUrl()).connection().prepareStatement(
+        Connection connection = DataSourceUtils.getConnection(ds);
+        try (PreparedStatement ps = connection.prepareStatement(
                 "SELECT * FROM spend WHERE id = ?"
         )) {
             ps.setObject(1, id);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     return Optional.of(mapResultSetToSpend(rs));
-                } else {
-                    return Optional.empty();
                 }
+                return Optional.empty();
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);
+        } finally {
+            DataSourceUtils.releaseConnection(connection, ds);
         }
     }
 
     @Override
     public List<SpendEntity> findAllByUsername(String username) {
-        try (PreparedStatement ps = holder(CFG.spendJdbcUrl()).connection().prepareStatement(
+        Connection connection = DataSourceUtils.getConnection(ds);
+        try (PreparedStatement ps = connection.prepareStatement(
                 "SELECT * FROM spend WHERE username = ?"
         )) {
             ps.setString(1, username);
@@ -85,24 +94,30 @@ public class SpendDaoJdbc implements SpendDao {
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);
+        } finally {
+            DataSourceUtils.releaseConnection(connection, ds);
         }
     }
 
     @Override
     public void deleteSpend(SpendEntity spend) {
-        try (PreparedStatement ps = holder(CFG.spendJdbcUrl()).connection().prepareStatement(
+        Connection connection = DataSourceUtils.getConnection(ds);
+        try (PreparedStatement ps = connection.prepareStatement(
                 "DELETE FROM spend WHERE id = ?"
         )) {
             ps.setObject(1, spend.getId());
             ps.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException(e);
+        } finally {
+            DataSourceUtils.releaseConnection(connection, ds);
         }
     }
 
     @Override
     public List<SpendEntity> findAll() {
-        try (PreparedStatement ps = holder(CFG.spendJdbcUrl()).connection().prepareStatement("SELECT * FROM spend");
+        Connection connection = DataSourceUtils.getConnection(ds);
+        try (PreparedStatement ps = connection.prepareStatement("SELECT * FROM spend");
              ResultSet rs = ps.executeQuery()) {
 
             List<SpendEntity> spends = new ArrayList<>();
@@ -112,6 +127,8 @@ public class SpendDaoJdbc implements SpendDao {
             return spends;
         } catch (SQLException e) {
             throw new RuntimeException(e);
+        } finally {
+            DataSourceUtils.releaseConnection(connection, ds);
         }
     }
 

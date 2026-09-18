@@ -13,7 +13,7 @@ public class XaTransactionTemplate {
     private final AtomicBoolean closeAfterAction = new AtomicBoolean(true);
 
     public XaTransactionTemplate(String... jdbcUrl) {
-        this.holders = Connections.holders(jdbcUrl);
+        this.holders = Connections.xaHolders(jdbcUrl);
     }
 
     public XaTransactionTemplate holdConnectionAfterAction() {

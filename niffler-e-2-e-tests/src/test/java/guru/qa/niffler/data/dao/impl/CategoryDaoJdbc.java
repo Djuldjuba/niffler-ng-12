@@ -3,7 +3,11 @@ package guru.qa.niffler.data.dao.impl;
 import guru.qa.niffler.config.Config;
 import guru.qa.niffler.data.dao.CategoryDao;
 import guru.qa.niffler.data.entity.spend.CategoryEntity;
+import guru.qa.niffler.data.tpl.DataSources;
+import org.springframework.jdbc.datasource.DataSourceUtils;
 
+import javax.sql.DataSource;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -13,11 +17,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import static guru.qa.niffler.data.tpl.Connections.holder;
-
 public class CategoryDaoJdbc implements CategoryDao {
 
     private static final Config CFG = Config.getInstance();
+    private final DataSource ds = DataSources.dataSource(CFG.spendJdbcUrl());
 
     private CategoryEntity mapResultSetToCategory(ResultSet rs) throws SQLException {
         CategoryEntity ce = new CategoryEntity();
@@ -30,9 +33,9 @@ public class CategoryDaoJdbc implements CategoryDao {
 
     @Override
     public CategoryEntity create(CategoryEntity category) {
-        try (PreparedStatement ps =  holder(CFG.spendJdbcUrl()).connection().prepareStatement(
-                "INSERT INTO category (username, name, archived) " +
-                        "VALUES (?, ?, ?)",
+        Connection connection = DataSourceUtils.getConnection(ds);
+        try (PreparedStatement ps = connection.prepareStatement(
+                "INSERT INTO category (username, name, archived) VALUES (?, ?, ?)",
                 Statement.RETURN_GENERATED_KEYS
         )) {
             ps.setString(1, category.getUsername());
@@ -53,56 +56,60 @@ public class CategoryDaoJdbc implements CategoryDao {
             return category;
         } catch (SQLException e) {
             throw new RuntimeException(e);
+        } finally {
+            DataSourceUtils.releaseConnection(connection, ds);
         }
     }
 
     @Override
     public Optional<CategoryEntity> findCategoryById(UUID id) {
-        try (PreparedStatement ps = holder(CFG.spendJdbcUrl()).connection().prepareStatement(
+        Connection connection = DataSourceUtils.getConnection(ds);
+        try (PreparedStatement ps = connection.prepareStatement(
                 "SELECT * FROM category WHERE id = ?"
         )) {
             ps.setObject(1, id);
-            ps.execute();
-            try (ResultSet rs = ps.getResultSet()) {
+            try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     return Optional.of(mapResultSetToCategory(rs));
-                } else {
-                    return Optional.empty();
                 }
+                return Optional.empty();
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);
+        } finally {
+            DataSourceUtils.releaseConnection(connection, ds);
         }
     }
 
     @Override
     public Optional<CategoryEntity> findCategoryByUsernameAndCategoryName(String username, String categoryName) {
-        try (PreparedStatement ps = holder(CFG.spendJdbcUrl()).connection().prepareStatement(
+        Connection connection = DataSourceUtils.getConnection(ds);
+        try (PreparedStatement ps = connection.prepareStatement(
                 "SELECT * FROM category WHERE username = ? AND name = ?"
         )) {
             ps.setString(1, username);
             ps.setString(2, categoryName);
-            ps.execute();
-            try (ResultSet rs = ps.getResultSet()) {
+            try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     return Optional.of(mapResultSetToCategory(rs));
-                } else {
-                    return Optional.empty();
                 }
+                return Optional.empty();
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);
+        } finally {
+            DataSourceUtils.releaseConnection(connection, ds);
         }
     }
 
     @Override
     public List<CategoryEntity> findAllByUsername(String username) {
-        try (PreparedStatement ps = holder(CFG.spendJdbcUrl()).connection().prepareStatement(
+        Connection connection = DataSourceUtils.getConnection(ds);
+        try (PreparedStatement ps = connection.prepareStatement(
                 "SELECT * FROM category WHERE username = ?"
         )) {
             ps.setString(1, username);
-            ps.execute();
-            try (ResultSet rs = ps.getResultSet()) {
+            try (ResultSet rs = ps.executeQuery()) {
                 List<CategoryEntity> categories = new ArrayList<>();
                 while (rs.next()) {
                     categories.add(mapResultSetToCategory(rs));
@@ -111,28 +118,31 @@ public class CategoryDaoJdbc implements CategoryDao {
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);
+        } finally {
+            DataSourceUtils.releaseConnection(connection, ds);
         }
     }
 
     @Override
     public void deleteCategory(CategoryEntity category) {
-        try (PreparedStatement ps = holder(CFG.spendJdbcUrl()).connection().prepareStatement(
+        Connection connection = DataSourceUtils.getConnection(ds);
+        try (PreparedStatement ps = connection.prepareStatement(
                 "DELETE FROM category WHERE id = ?"
         )) {
             ps.setObject(1, category.getId());
             ps.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException(e);
+        } finally {
+            DataSourceUtils.releaseConnection(connection, ds);
         }
     }
 
     @Override
     public List<CategoryEntity> findAll() {
-        try (PreparedStatement ps = holder(CFG.spendJdbcUrl()).connection().prepareStatement(
-                "SELECT * FROM category"
-        )) {
-            ps.execute();
-            try (ResultSet rs = ps.getResultSet()) {
+        Connection connection = DataSourceUtils.getConnection(ds);
+        try (PreparedStatement ps = connection.prepareStatement("SELECT * FROM category")) {
+            try (ResultSet rs = ps.executeQuery()) {
                 List<CategoryEntity> categories = new ArrayList<>();
                 while (rs.next()) {
                     categories.add(mapResultSetToCategory(rs));
@@ -141,6 +151,8 @@ public class CategoryDaoJdbc implements CategoryDao {
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);
+        } finally {
+            DataSourceUtils.releaseConnection(connection, ds);
         }
     }
 }

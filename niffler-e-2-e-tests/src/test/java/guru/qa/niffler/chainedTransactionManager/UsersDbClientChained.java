@@ -25,40 +25,55 @@ public class UsersDbClientChained {
     private final AuthAuthorityDao authAuthorityDao = new AuthAuthorityDaoSpringJdbc();
     private final UserdataUserDao userdataUserDao = new UserdataUserDaoSpringJdbc();
 
-    private final ChainedTransactionTemplate chainedTxTemplate = new ChainedTransactionTemplate(
+    private final ChainedTransactionTemplate authFirstTemplate = new ChainedTransactionTemplate(
             CFG.authJdbcUrl(),
             CFG.userdataJdbcUrl()
     );
 
+    private final ChainedTransactionTemplate userdataFirstTemplate = new ChainedTransactionTemplate(
+            CFG.userdataJdbcUrl(),
+            CFG.authJdbcUrl()
+    );
+
     public UserdataUserJson createUser(UserdataUserJson user) {
-        return chainedTxTemplate.execute(() -> {
-            AuthUserEntity authUser = new AuthUserEntity();
-            authUser.setUsername(user.username());
-            authUser.setPassword(pe.encode("12345"));
-            authUser.setEnabled(true);
-            authUser.setAccountNonExpired(true);
-            authUser.setAccountNonLocked(true);
-            authUser.setCredentialsNonExpired(true);
+        return authFirstTemplate.execute(() -> doCreateUser(user));
+    }
 
-            AuthUserEntity createdAuthUser = authUserDao.createUser(authUser);
+    public UserdataUserJson createUserAuthFirst(UserdataUserJson user) {
+        return authFirstTemplate.execute(() -> doCreateUser(user));
+    }
 
-            AuthorityEntity[] authorities = Arrays.stream(Authority.values())
-                    .map(authority -> {
-                        AuthorityEntity ae = new AuthorityEntity();
-                        AuthUserEntity userRef = new AuthUserEntity();
-                        userRef.setId(createdAuthUser.getId());
-                        ae.setUser(userRef);
-                        ae.setAuthority(authority);
-                        return ae;
-                    })
-                    .toArray(AuthorityEntity[]::new);
+    public UserdataUserJson createUserUserdataFirst(UserdataUserJson user) {
+        return userdataFirstTemplate.execute(() -> doCreateUser(user));
+    }
 
-            authAuthorityDao.create(authorities);
+    private UserdataUserJson doCreateUser(UserdataUserJson user) {
+        AuthUserEntity authUser = new AuthUserEntity();
+        authUser.setUsername(user.username());
+        authUser.setPassword(pe.encode("12345"));
+        authUser.setEnabled(true);
+        authUser.setAccountNonExpired(true);
+        authUser.setAccountNonLocked(true);
+        authUser.setCredentialsNonExpired(true);
 
-            UserDataEntity userData = UserDataEntity.fromJson(user);
-            userData.setUsername(user.username());
+        AuthUserEntity createdAuthUser = authUserDao.createUser(authUser);
 
-            return UserdataUserJson.fromEntity(userdataUserDao.createUser(userData));
-        });
+        AuthorityEntity[] authorities = Arrays.stream(Authority.values())
+                .map(authority -> {
+                    AuthorityEntity ae = new AuthorityEntity();
+                    AuthUserEntity userRef = new AuthUserEntity();
+                    userRef.setId(createdAuthUser.getId());
+                    ae.setUser(userRef);
+                    ae.setAuthority(authority);
+                    return ae;
+                })
+                .toArray(AuthorityEntity[]::new);
+
+        authAuthorityDao.create(authorities);
+
+        UserDataEntity userData = UserDataEntity.fromJson(user);
+        userData.setUsername(user.username());
+
+        return UserdataUserJson.fromEntity(userdataUserDao.createUser(userData));
     }
 }
