@@ -6,20 +6,23 @@ import guru.qa.niffler.model.CategoryJson;
 import guru.qa.niffler.service.SpendClient;
 import guru.qa.niffler.service.SpendDbClient;
 import guru.qa.niffler.utils.RandomDataUtils;
+import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.ParameterContext;
 import org.junit.jupiter.api.extension.ParameterResolver;
 import org.junit.platform.commons.support.AnnotationSupport;
 
-public class CategoryExtension implements BeforeEachCallback, ParameterResolver {
+public class CategoryExtension implements BeforeEachCallback, AfterEachCallback, ParameterResolver {
 
-    public static final ExtensionContext.Namespace NAMESPACE = ExtensionContext.Namespace.create(CategoryExtension.class);
+    public static final ExtensionContext.Namespace NAMESPACE =
+            ExtensionContext.Namespace.create(CategoryExtension.class);
 
     private final SpendClient spendClient = new SpendDbClient();
 
     @Override
     public void beforeEach(ExtensionContext context) {
+
         AnnotationSupport.findAnnotation(
                 context.getRequiredTestMethod(),
                 User.class
@@ -34,12 +37,26 @@ public class CategoryExtension implements BeforeEachCallback, ParameterResolver 
                         ? RandomDataUtils.randomCategoryName()
                         : firstCategory.name();
 
-                final CategoryJson created = spendClient.createCategory(
-                        new CategoryJson(null, name, username, firstCategory.archived())
-                );
+                CategoryJson created = spendClient
+                        .findByUsernameAndName(username, name)
+                        .orElseGet(() -> spendClient.createCategory(
+                                new CategoryJson(null, name, username, firstCategory.archived())
+                        ));
+
                 context.getStore(NAMESPACE).put(context.getUniqueId(), created);
             }
         });
+    }
+
+    @Override
+    public void afterEach(ExtensionContext context) {
+        CategoryJson created = context.getStore(NAMESPACE)
+                .get(context.getUniqueId(), CategoryJson.class);
+
+        if (created != null) {
+            spendClient.removeCategory(created);
+            context.getStore(NAMESPACE).remove(context.getUniqueId());
+        }
     }
 
     @Override

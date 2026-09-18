@@ -7,6 +7,7 @@ import guru.qa.niffler.model.SpendJson;
 import guru.qa.niffler.service.SpendClient;
 import guru.qa.niffler.service.SpendDbClient;
 import guru.qa.niffler.utils.RandomDataUtils;
+import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.ParameterContext;
@@ -15,9 +16,10 @@ import org.junit.platform.commons.support.AnnotationSupport;
 
 import java.util.Date;
 
-public class SpendingExtension implements BeforeEachCallback, ParameterResolver {
+public class SpendingExtension implements BeforeEachCallback, AfterEachCallback, ParameterResolver {
 
-    public static final ExtensionContext.Namespace NAMESPACE = ExtensionContext.Namespace.create(SpendingExtension.class);
+    public static final ExtensionContext.Namespace NAMESPACE =
+            ExtensionContext.Namespace.create(SpendingExtension.class);
 
     private final SpendClient spendClient = new SpendDbClient();
 
@@ -30,17 +32,11 @@ public class SpendingExtension implements BeforeEachCallback, ParameterResolver 
                 User.class
         ).ifPresent(userAnno -> {
 
-            String username = userAnno.username().equals("RANDOM")
-                    ? RandomDataUtils.randomUsername()
-                    : userAnno.username();
+            String username = userAnno.username();
 
             Spending[] spendings = userAnno.spendings();
             if (spendings.length > 0) {
                 Spending firstSpending = spendings[0];
-
-                String categoryName = firstSpending.category().equals("RANDOM")
-                        ? RandomDataUtils.randomCategoryName()
-                        : firstSpending.category();
 
                 String description = firstSpending.description().equals("RANDOM")
                         ? RandomDataUtils.randomSentence(5)
@@ -51,13 +47,18 @@ public class SpendingExtension implements BeforeEachCallback, ParameterResolver 
                         : firstSpending.amount();
 
                 CategoryJson categoryForSpending;
-
-                if (existingCategory != null && existingCategory.name().equals(categoryName)) {
+                if (existingCategory != null) {
                     categoryForSpending = existingCategory;
                 } else {
-                    categoryForSpending = spendClient.createCategory(
-                            new CategoryJson(null, categoryName, username, false)
-                    );
+                    String categoryName = firstSpending.category().equals("RANDOM")
+                            ? RandomDataUtils.randomCategoryName()
+                            : firstSpending.category();
+
+                    categoryForSpending = spendClient
+                            .findByUsernameAndName(username, categoryName)
+                            .orElseGet(() -> spendClient.createCategory(
+                                    new CategoryJson(null, categoryName, username, false)
+                            ));
                 }
 
                 final SpendJson created = spendClient.createSpending(
@@ -74,6 +75,16 @@ public class SpendingExtension implements BeforeEachCallback, ParameterResolver 
                 context.getStore(NAMESPACE).put(context.getUniqueId(), created);
             }
         });
+    }
+
+    @Override
+    public void afterEach(ExtensionContext context) {
+        SpendJson created = context.getStore(NAMESPACE)
+                .get(context.getUniqueId(), SpendJson.class);
+        if (created != null) {
+            spendClient.removeSpending(created);
+            context.getStore(NAMESPACE).remove(context.getUniqueId());
+        }
     }
 
     @Override

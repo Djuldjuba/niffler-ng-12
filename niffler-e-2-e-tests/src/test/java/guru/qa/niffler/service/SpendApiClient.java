@@ -46,4 +46,14 @@ public class SpendApiClient implements SpendClient {
   public Optional<CategoryJson> findByUsernameAndName(String username, String category) {
     throw new UnsupportedOperationException("Not implemented");
   }
+
+  @Override
+  public void removeCategory(CategoryJson category) {
+    throw new UnsupportedOperationException("Not implemented");
+  }
+
+  @Override
+  public void removeSpending(SpendJson spending) {
+    throw new UnsupportedOperationException("Not implemented");
+  }
 }
