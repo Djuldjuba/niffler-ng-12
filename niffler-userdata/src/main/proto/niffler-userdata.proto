@@ -1,0 +1,139 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+
+package guru.qa.grpc.niffler;
+
+option java_multiple_files = true;
+option java_package = "guru.qa.niffler.grpc";
+option java_outer_classname = "NifflerUserdataProto";
+
+service NifflerUserdataService {
+  rpc GetCurrentUser (CurrentUserRequest) returns (UserResponse) {}
+  rpc UpdateUser (UpdateUserRequest) returns (UserResponse) {}
+  rpc GetAllUsers (AllUsersRequest) returns (UsersPageResponse) {}
+  rpc GetAllUsersV2 (AllUsersPageRequest) returns (UsersPageResponse) {}
+
+  rpc GetFriends (FriendsRequest) returns (UsersPageResponse) {}
+  rpc GetFriendsV2 (FriendsPageRequest) returns (UsersPageResponse) {}
+  rpc RemoveFriend (RemoveFriendRequest) returns (google.protobuf.Empty) {}
+
+  rpc SendInvitation (SendInvitationRequest) returns (UserResponse) {}
+  rpc AcceptInvitation (AcceptInvitationRequest) returns (UserResponse) {}
+  rpc DeclineInvitation (DeclineInvitationRequest) returns (UserResponse) {}
+
+  rpc RegisterPushToken (RegisterPushTokenRequest) returns (google.protobuf.Empty) {}
+}
+
+message UserResponse {
+  User user = 1;
+}
+
+message UsersPageResponse {
+  int32 totalElements = 1;
+  int32 totalPages = 2;
+  bool first = 3;
+  bool last = 4;
+  int32 size = 5;
+  int32 number = 6;
+  bool empty = 7;
+  repeated User edges = 8;
+}
+
+message User {
+  string id = 1;
+  string username = 2;
+  optional string firstname = 3;
+  optional string surname = 4;
+  optional string fullname = 5;
+  CurrencyValues currency = 6;
+  optional string photo = 7;
+  optional string photoSmall = 8;
+  optional FriendshipStatus friendshipStatus = 9;
+}
+
+enum CurrencyValues {
+  RUB = 0;
+  USD = 1;
+  EUR = 2;
+  KZT = 3;
+}
+
+enum FriendshipStatus {
+  INVITE_SENT = 0;
+  INVITE_RECEIVED = 1;
+  FRIEND = 2;
+  VOID = 3;
+}
+
+message PageInfo {
+  int32 page = 1;
+  int32 size = 2;
+  repeated Sort sort = 3;
+}
+
+message Sort {
+  string property = 1;
+  Direction direction = 2;
+}
+
+enum Direction {
+  ASC = 0;
+  DESC = 1;
+}
+
+message CurrentUserRequest {
+  string username = 1;
+}
+
+message UpdateUserRequest {
+  User user = 1;
+}
+
+message AllUsersRequest {
+  string username = 1;
+  optional string searchQuery = 2;
+}
+
+message AllUsersPageRequest {
+  string username = 1;
+  PageInfo pageInfo = 2;
+  optional string searchQuery = 3;
+}
+
+message FriendsRequest {
+  string username = 1;
+  optional string searchQuery = 2;
+}
+
+message FriendsPageRequest {
+  string username = 1;
+  PageInfo pageInfo = 2;
+  optional string searchQuery = 3;
+}
+
+message RemoveFriendRequest {
+  string username = 1;
+  string friendToBeRemoved = 2;
+}
+
+message SendInvitationRequest {
+  string username = 1;
+  string friendToBeRequested = 2;
+}
+
+message AcceptInvitationRequest {
+  string username = 1;
+  string friendToBeAdded = 2;
+}
+
+message DeclineInvitationRequest {
+  string username = 1;
+  string invitationToBeDeclined = 2;
+}
+
+message RegisterPushTokenRequest {
+  string username = 1;
+  string token = 2;
+  string userAgent = 3;
+}

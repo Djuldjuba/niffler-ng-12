@@ -31,5 +31,15 @@
         ]
       }
     }
+  },
+  "firefox": {
+    "default": "128.0",
+    "versions": {
+      "128.0": {
+        "image": "selenoid/vnc:firefox_128.0",
+        "port": "4444",
+        "env": ["TZ=Europe/Moscow"]
+      }
+    }
   }
 }
