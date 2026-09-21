@@ -15,7 +15,7 @@ import java.util.UUID;
 public class SpendRepositoryHibernate implements SpendRepository {
 
     private static final Config CFG = Config.getInstance();
-    private final EntityManager entityManager = EntityManagers.em(CFG.spendJdbcUrl());
+    private final EntityManager entityManager = EntityManagers.em(CFG.spendJdbcUrl(), "niffler-spend");
 
     @Override
     public SpendEntity create(SpendEntity spend) {

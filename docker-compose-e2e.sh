@@ -7,6 +7,8 @@ export PREFIX="${IMAGE_PREFIX}"
 export ALLURE_DOCKER_API=http://allure:5050/
 export HEAD_COMMIT_MESSAGE="local build"
 export ARCH=$(uname -m)
+export BROWSER="${1:-chrome}"
+echo "### Browser: $BROWSER ###"
 
 docker compose down
 docker_containers=$(docker ps -a -q)
@@ -29,5 +31,6 @@ bash ./gradlew clean
 bash ./gradlew jibDockerBuild -x :niffler-e-2-e-tests:test -Duser.timezone=UTC
 
 docker pull twilio/selenoid:chrome_stable_140
+docker pull selenoid/vnc:firefox_128.0
 docker compose up -d
 docker ps -a

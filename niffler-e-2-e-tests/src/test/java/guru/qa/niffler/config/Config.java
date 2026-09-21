@@ -3,7 +3,9 @@ package guru.qa.niffler.config;
 public interface Config {
 
   static Config getInstance() {
-    return LocalConfig.INSTANCE;
+    return "docker".equals(System.getProperty("test.env"))
+            ? DockerConfig.INSTANCE
+            : LocalConfig.INSTANCE;
   }
 
   String frontUrl();
@@ -14,7 +16,9 @@ public interface Config {
   String userdataJdbcUrl();
   String spendUrl();
   String spendJdbcUrl();
-  String githubUrl();
+  default String githubUrl() {
+    return "https://api.github.com/";
+  }
   String currencyJdbcUrl();
   String dbUsername();
   String dbPassword();

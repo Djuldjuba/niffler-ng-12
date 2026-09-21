@@ -13,8 +13,8 @@ import java.util.UUID;
 
 public class AuthUserRepositoryHibernate implements AuthUserRepository {
 
-    private final EntityManager entityManager = EntityManagers.em(CFG.authJdbcUrl());
     private static final Config CFG = Config.getInstance();
+    private final EntityManager entityManager = EntityManagers.em(CFG.authJdbcUrl(), "niffler-auth");
 
     @Override
     public AuthUserEntity create(AuthUserEntity user) {

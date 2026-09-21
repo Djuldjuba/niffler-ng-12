@@ -15,7 +15,7 @@ import java.util.UUID;
 
 public class UserdataUserRepositoryHibernate implements UserdataUserRepository {
 
-    private final EntityManager entityManager = EntityManagers.em(CFG.userdataJdbcUrl());
+    private final EntityManager entityManager = EntityManagers.em(CFG.userdataJdbcUrl(), "niffler-userdata");
     private static final Config CFG = Config.getInstance();
 
     @Override

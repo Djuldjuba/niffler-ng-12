@@ -1,5 +1,6 @@
 package guru.qa.niffler.jupiter.extension;
 
+import com.codeborne.selenide.Configuration;
 import com.codeborne.selenide.Selenide;
 import com.codeborne.selenide.WebDriverRunner;
 import com.codeborne.selenide.logevents.SelenideLogger;
@@ -12,27 +13,52 @@ import org.junit.jupiter.api.extension.LifecycleMethodExecutionExceptionHandler;
 import org.junit.jupiter.api.extension.TestExecutionExceptionHandler;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.TakesScreenshot;
+import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.firefox.FirefoxOptions;
 
 import java.io.ByteArrayInputStream;
 
 public class BrowserExtension implements
-    BeforeEachCallback,
-    AfterEachCallback,
-    TestExecutionExceptionHandler,
-    LifecycleMethodExecutionExceptionHandler {
+        BeforeEachCallback,
+        AfterEachCallback,
+        TestExecutionExceptionHandler,
+        LifecycleMethodExecutionExceptionHandler {
+
+  static {
+    String browser = System.getProperty("browser", "chrome");
+    Configuration.browser = browser;
+    Configuration.timeout = 8000;
+    Configuration.pageLoadStrategy = "eager";
+
+    if ("docker".equals(System.getProperty("test.env"))) {
+      Configuration.remote = "http://selenoid:4444/wd/hub";
+
+      switch (browser) {
+        case "firefox" -> {
+          Configuration.browserVersion = "128.0";
+          Configuration.browserCapabilities = new FirefoxOptions();
+        }
+        default -> {
+          Configuration.browserVersion = "140.0";
+          Configuration.browserCapabilities = new ChromeOptions()
+                  .addArguments("--no-sandbox");
+        }
+      }
+    }
+  }
 
   @Override
-  public void afterEach(ExtensionContext context) throws Exception {
+  public void afterEach(ExtensionContext context) {
     if (WebDriverRunner.hasWebDriverStarted()) {
       Selenide.closeWebDriver();
     }
   }
 
   @Override
-  public void beforeEach(ExtensionContext context) throws Exception {
+  public void beforeEach(ExtensionContext context) {
     SelenideLogger.addListener("Allure-selenide", new AllureSelenide()
-        .savePageSource(false)
-        .screenshots(false)
+            .savePageSource(false)
+            .screenshots(false)
     );
   }
 
@@ -57,10 +83,10 @@ public class BrowserExtension implements
   private static void doScreenshot() {
     if (WebDriverRunner.hasWebDriverStarted()) {
       Allure.addAttachment(
-          "Screen on fail",
-          new ByteArrayInputStream(
-              ((TakesScreenshot) WebDriverRunner.getWebDriver()).getScreenshotAs(OutputType.BYTES)
-          )
+              "Screen on fail",
+              new ByteArrayInputStream(
+                      ((TakesScreenshot) WebDriverRunner.getWebDriver()).getScreenshotAs(OutputType.BYTES)
+              )
       );
     }
   }
