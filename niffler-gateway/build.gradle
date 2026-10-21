@@ -37,6 +37,9 @@ dependencies {
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation "org.springframework.security:spring-security-test:${project.ext.springSecurityTestVersion}"
+
+    testImplementation "org.wiremock:wiremock-standalone:3.2.0"
+    testImplementation "org.wiremock:wiremock-grpc-extension-standalone:0.6.0"
 }
 
 xjcGeneration {
