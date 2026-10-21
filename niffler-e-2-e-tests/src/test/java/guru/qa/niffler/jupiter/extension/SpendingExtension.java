@@ -11,7 +11,6 @@ import org.junit.jupiter.api.extension.ParameterResolutionException;
 import org.junit.jupiter.api.extension.ParameterResolver;
 import org.junit.platform.commons.support.AnnotationSupport;
 
-import java.sql.SQLException;
 import java.util.Date;
 
 public class SpendingExtension implements BeforeEachCallback, ParameterResolver {
@@ -41,11 +40,7 @@ public class SpendingExtension implements BeforeEachCallback, ParameterResolver 
             );
 
             SpendJson createdSpending;
-            try {
-                createdSpending = spendClient.createSpend(spend);
-            } catch (SQLException e) {
-                throw new RuntimeException(e);
-            }
+            createdSpending = spendClient.createSpend(spend);
 
             context.getStore(NAMESPACE)
                     .put(context.getUniqueId(), createdSpending);

@@ -65,6 +65,10 @@ niffler-userdata:
 firebase:
   enabled: false
   path: ${GOOGLE_APPLICATION_CREDENTIALS:}
+
+grpc:
+  server:
+    port: 8095
 ---
 spring:
   config:
@@ -88,6 +92,10 @@ niffler-userdata:
   base-uri: 'http://userdata.niffler.dc:8089'
 firebase:
   enabled: false
+
+grpc:
+  server:
+    port: 8095
 ---
 spring:
   config:
@@ -116,6 +124,10 @@ niffler-userdata:
 firebase:
   enabled: true
   config: ${firebase.key}
+
+grpc:
+  server:
+    port: 8095
 ---
 spring:
   config:
@@ -144,4 +156,3 @@ niffler-userdata:
 firebase:
   enabled: true
   config: ${firebase.key}
----

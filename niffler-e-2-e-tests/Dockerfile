@@ -8,10 +8,12 @@ COPY ./settings.gradle ./
 COPY ./gradle.properties ./
 COPY ./niffler-e-2-e-tests/build.gradle ./niffler-e-2-e-tests/
 COPY ./niffler-grpc-common/build.gradle ./niffler-grpc-common/
+COPY ./niffler-userdata/build.gradle ./niffler-userdata/
 
 RUN gradle :niffler-e-2-e-tests:dependencies :niffler-grpc-common:dependencies --no-daemon
 
 COPY ./niffler-e-2-e-tests ./niffler-e-2-e-tests
 COPY ./niffler-grpc-common ./niffler-grpc-common
+COPY ./niffler-userdata ./niffler-userdata
 
-CMD gradle test -p niffler-e-2-e-tests --no-daemon -Dtest.env=docker -Drepository=jpa -Duser.timezone=Europe/Moscow
+CMD gradle test -p niffler-e-2-e-tests --no-daemon -Dtest.env=docker -Drepository=jpa -Duser.timezone=Europe/Moscow -Dbrowser=${BROWSER:-chrome}
